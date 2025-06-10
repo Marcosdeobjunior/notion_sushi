@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Radar de Habilidades</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    background: #191919;
+    font-family: 'Segoe UI', sans-serif;
+    color: #eee; display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  canvas {
+    max-width: 90vw; max-height: 90vw;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .modal {
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: none; justify-content: center;
+    align-items: center; z-index: 999;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .modal.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+
+  .panel {
+    background: #222;
+    padding: 1.5rem;
+    border-radius: 12px;
+    width: 90%; max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 0 25px rgba(0,255,128,0.2);
+  }
+
+  .panel h2 {
+    margin-top: 0; text-align: center;
+    color: #0f0;
+  }
+
+  .skill {
+    margin-bottom: 1.2rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.8rem;
+  }
+
+  label {
+    display: block; margin-bottom: 0.3rem;
+    font-weight: 600; font-size: 0.9rem;
+  }
+
+  input[type="text"], input[type="range"] {
+    width: 100%; background: #2a2a2a;
+    border: none; padding: 0.5rem;
+    border-radius: 6px; color: #fff;
+    font-size: 0.9rem;
+  }
+
+  input[type="range"] { margin-top: 0.3rem; }
+
+  .buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  button {
+    flex: 1 1 45%;
+    background: #0f0; color: #000;
+    font-weight: bold; padding: 0.6rem;
+    border: none; border-radius: 8px;
+    cursor: pointer; font-size: 0.9rem;
+    margin-top: 1rem;
+    transition: background 0.2s;
+  }
+
+  button:hover { background: #0c0; }
+
+  .delete-btn {
+    background: #f33; color: #fff;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    width: 100%;
+  }
+
+  .delete-btn:hover { background: #c00; }
+</style>
+</head>
+<body>
+<canvas id="radar" width="500" height="500"></canvas>
+
+<div class="modal" id="modal">
+  <div class="panel" id="editor">
+    <h2>Editar Habilidades</h2>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById("radar");
+  const ctx = canvas.getContext("2d");
+  const modal = document.getElementById("modal");
+  const editor = document.getElementById("editor");
+  const levels = 10;
+  const radius = 180;
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const maxSkills = 12;
+
+  let skills = JSON.parse(localStorage.getItem("skills")) || [
+    { name: "Força", level: 7 },
+    { name: "Agilidade", level: 6 },
+    { name: "Inteligência", level: 8 },
+    { name: "Carisma", level: 5 },
+    { name: "Sabedoria", level: 9 },
+    { name: "Sorte", level: 6 },
+  ];
+
+  function save() {
+    localStorage.setItem("skills", JSON.stringify(skills));
+  }
+
+  function drawRadar() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const n = skills.length;
+    const angleStep = (Math.PI * 2) / n;
+
+    ctx.lineWidth = 1;
+    for (let l = 1; l <= levels; l++) {
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const angle = i * angleStep - Math.PI / 2;
+        const r = (radius / levels) * l;
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = "#444";
+      ctx.stroke();
+    }
+
+    for (let i = 0; i < n; i++) {
+      const angle = i * angleStep - Math.PI / 2;
+      const x = cx + Math.cos(angle) * radius;
+      const y = cy + Math.sin(angle) * radius;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = "#444";
+      ctx.stroke();
+    }
+
+    ctx.beginPath();
+    skills.forEach((skill, i) => {
+      const angle = i * angleStep - Math.PI / 2;
+      const value = (skill.level / levels) * radius;
+      const x = cx + Math.cos(angle) * value;
+      const y = cy + Math.sin(angle) * value;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = "rgba(0,255,128,0.2)";
+    ctx.strokeStyle = "#0f0";
+    ctx.lineWidth = 2;
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = "14px Segoe UI";
+    ctx.fillStyle = "#0f0";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    skills.forEach((skill, i) => {
+      const angle = i * angleStep - Math.PI / 2;
+      const dist = radius + 18;
+      const x = cx + Math.cos(angle) * dist;
+      const y = cy + Math.sin(angle) * dist;
+      ctx.fillText(`${skill.name} (${skill.level})`, x, y);
+    });
+  }
+
+  function openEditor() {
+    editor.innerHTML = `<h2>Editar Habilidades</h2>`;
+
+    skills.forEach((skill, i) => {
+      const div = document.createElement("div");
+      div.className = "skill";
+
+      const nameLabel = document.createElement("label");
+      nameLabel.textContent = `Habilidade ${i + 1}`;
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.value = skill.name;
+      nameInput.oninput = () => {
+        skills[i].name = nameInput.value || `Skill ${i + 1}`;
+        save();
+        drawRadar();
+      };
+
+      const levelLabel = document.createElement("label");
+      levelLabel.textContent = `Nível: ${skill.level}`;
+      const levelInput = document.createElement("input");
+      levelInput.type = "range";
+      levelInput.min = 0;
+      levelInput.max = levels;
+      levelInput.value = skill.level;
+      levelInput.oninput = () => {
+        skills[i].level = +levelInput.value;
+        levelLabel.textContent = `Nível: ${skills[i].level}`;
+        save();
+        drawRadar();
+      };
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "delete-btn";
+      deleteBtn.textContent = "Excluir";
+      deleteBtn.onclick = () => {
+        skills.splice(i, 1);
+        save();
+        openEditor();
+        drawRadar();
+      };
+
+      div.appendChild(nameLabel);
+      div.appendChild(nameInput);
+      div.appendChild(levelLabel);
+      div.appendChild(levelInput);
+      div.appendChild(deleteBtn);
+      editor.appendChild(div);
+    });
+
+    const buttons = document.createElement("div");
+    buttons.className = "buttons";
+
+    const addBtn = document.createElement("button");
+    addBtn.textContent = "Adicionar";
+    addBtn.onclick = () => {
+      if (skills.length >= maxSkills) return alert("Limite de 12 habilidades.");
+      skills.push({ name: `Nova`, level: 5 });
+      save();
+      openEditor();
+      drawRadar();
+    };
+
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "Voltar";
+    closeBtn.onclick = () => modal.classList.remove("active");
+
+    buttons.appendChild(addBtn);
+    buttons.appendChild(closeBtn);
+    editor.appendChild(buttons);
+
+    modal.classList.add("active");
+  }
+
+  canvas.addEventListener("click", openEditor);
+  drawRadar();
+})();
+</script>
+</body>
+</html>
