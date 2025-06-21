@@ -108,7 +108,7 @@
         ESTRUTURA DE CADA OPÇÃO:
         - id: Identificador único da opção
         - text: Texto visível da opção
-        - icon: Classe do ícone Font Awesome
+        - icon: Classe do ícone Font Awesome (APENAS as classes, não o HTML completo)
         - link: URL de destino (use "#" para ações especiais ou mudanças de estado)
         */
         
@@ -201,7 +201,7 @@
                     { 
                         id: "habitos", 
                         text: "Hábitos", 
-                        icon: "<i class="fa-solid fa-stopwatch"></i>", 
+                        icon: "fa-solid fa-stopwatch",  // CORRIGIDO: apenas as classes CSS
                         link: "https://www.notion.so/H-bitos-21947457f73b8084ab09e128ad7faf4b?source=copy_link" 
                     },
                     { 
@@ -300,6 +300,11 @@
             - Utilize qualquer ícone do Font Awesome 6.2.0
             - Exemplos: fa-solid fa-home, fa-regular fa-user, fa-solid fa-cog
             - Lista completa: https://fontawesome.com/icons
+            
+            IMPORTANTE SOBRE ÍCONES:
+            - Use APENAS as classes CSS: "fa-solid fa-stopwatch"
+            - NÃO use o HTML completo: "<i class='fa-solid fa-stopwatch'></i>"
+            - O JavaScript criará automaticamente o elemento <i> com as classes
             */
         };
 
@@ -449,6 +454,10 @@
         5. ALTERAR CORES E ESTILOS:
            - Modifique as regras CSS na seção <style> no início do ficheiro
         
+        6. ÍCONES:
+           - Use apenas as classes CSS: "fa-solid fa-nome-do-icone"
+           - NÃO use HTML: "<i class='fa-solid fa-nome-do-icone'></i>"
+        
         ================================================================================
         */
     </script>
@@ -456,5 +465,4 @@
 </body>
 
 </html>
-
 
