@@ -1,3 +1,12 @@
+O problema está na lógica da função `navigate` no seu JavaScript. A ordem das verificações faz com que o botão "Home" (e outros links que deveriam abrir um `mainLink` ou um link externo) apenas atualize o estado do menu, em vez de abrir o link.
+
+A sua função `navigate` primeiro verifica se o `id` clicado corresponde a um estado de menu (`if (menuStates[id])`). Se for o caso (como "default", "tarefas", "pessoal"), ela chama `updateMenu(id)` e retorna, sem nunca chegar à parte que verifica o `mainLink` do botão esquerdo ou os links externos das opções.
+
+Para corrigir isso, precisamos reordenar as verificações na função `navigate`. Primeiro, verificamos se o clique foi no botão "Home" (o botão esquerdo que representa o estado atual) para abrir o `mainLink` associado. Depois, verificamos se é uma mudança para um novo estado de menu. Por último, tratamos os links externos das opções do menu.
+
+Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` foi alterada.
+
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -314,9 +323,10 @@
             - O JavaScript criará automaticamente o elemento <i> com as classes
             
             BOTÃO ESQUERDO CLICÁVEL:
-            - O botão do lado esquerdo agora é clicável e navega para o estado atual
-            - Exemplo: Se estiver no estado "tarefas", clicar no botão "Tarefas" 
-              irá navegar para o link principal de tarefas ou recarregar o estado
+            - O botão do lado esquerdo agora é clicável
+            - Ao clicar nele, abre o link principal do estado atual
+            - Exemplo: No estado "tarefas", clicar em "Tarefas" abre o link do Notion
+            - No estado "default", clicar em "Home" recarrega o estado inicial
             */
         };
 
@@ -406,48 +416,42 @@
 
         /**
          * Função de navegação que lida com os cliques nos itens do menu.
-         * NOVA FUNCIONALIDADE: Agora também lida com cliques no botão esquerdo.
          * Determina se deve mudar o estado do menu ou abrir um link externo.
          * 
          * @param {string} id - O ID do item do menu clicado
          */
         function navigate(id) {
-            // ========================================================================
-            // VERIFICAR SE É UMA MUDANÇA DE ESTADO
-            // ========================================================================
-            
-            // Verifica se o ID clicado corresponde a um estado de menu definido
-            if (menuStates[id]) {
-                // Se sim, atualiza o menu para o novo estado
+            const currentConfig = menuStates[currentState]; // Obtém a configuração do estado atual uma vez
+
+            // Caso 1: Clique no botão "Home" (lado esquerdo) para o *estado atual*
+            // Isso lida com o mainLink para o estado de menu atualmente ativo.
+            if (id === currentState) {
+                if (currentConfig.mainLink && currentConfig.mainLink !== '#') {
+                    window.open(currentConfig.mainLink, '_blank').focus();
+                    return; // Sai após abrir o link
+                }
+                // Se mainLink for '#' ou não definido, apenas renderiza novamente o estado atual (sem navegação real)
                 updateMenu(id);
-                return; // Sai da função, pois o menu foi atualizado
+                return;
             }
 
-            // ========================================================================
-            // PROCESSAR LINK EXTERNO OU AÇÃO ESPECIAL
-            // ========================================================================
-            
-            // Se não é uma mudança de estado, procura o link na configuração atual
-            const currentConfig = menuStates[currentState];
-            
-            // NOVA FUNCIONALIDADE: Verifica se o clique foi no botão esquerdo (estado atual)
-            if (id === currentState) {
-                // Se clicou no botão do estado atual, usa o mainLink desse estado
-                const currentConfig = menuStates[currentState];
-                
-                if (currentConfig.mainLink && currentConfig.mainLink !== '#') {
-                    window.open(currentConfig.mainLink, '_blank').focus(); // Abre o link principal em nova aba
-                    return;
-                }
+            // Caso 2: Clique em uma opção que corresponde a um *novo* estado de menu (ex: "Tarefas", "Pessoal")
+            // Isso muda toda a estrutura do menu.
+            if (menuStates[id]) {
+                updateMenu(id); // Muda para o novo estado do menu
+                return;
             }
-            
-            // Procura a opção no menu atual
+
+            // Caso 3: Clique em uma opção no menu direito que leva a um *link externo*
+            // Isso lida com links externos diretos dentro das opções do menu atual.
             const option = currentConfig.rightMenuOptions.find(opt => opt.id === id);
-            
-            // Se encontrou a opção e ela tem um link válido, abre o link
             if (option && option.link && option.link !== '#') {
-                window.open(option.link, '_blank').focus(); // Abre em nova aba
+                window.open(option.link, '_blank').focus(); // Abre o link externo
+                return;
             }
+
+            // Se nenhuma das opções acima, é provável que seja um link de espaço reservado ('#') que não
+            // aciona uma mudança de estado ou um link externo, então nenhuma ação é necessária aqui.
         }
 
         /*
@@ -483,26 +487,4 @@
         
         4. CRIAR NOVOS ESTADOS:
            - Adicione um novo objeto ao 'menuStates'
-           - Adicione uma opção no estado 'default' para aceder ao novo estado
-        
-        5. ALTERAR CORES E ESTILOS:
-           - Modifique as regras CSS na seção <style> no início do ficheiro
-        
-        6. ÍCONES:
-           - Use apenas as classes CSS: "fa-solid fa-nome-do-icone"
-           - NÃO use HTML: "<i class='fa-solid fa-nome-do-icone'></i>"
-        
-        7. BOTÃO ESQUERDO CLICÁVEL (NOVA FUNCIONALIDADE):
-           - O botão do lado esquerdo agora é clicável
-           - Ao clicar nele, abre o link principal do estado atual
-           - Exemplo: No estado "tarefas", clicar em "Tarefas" abre o link do Notion
-           - No estado "default", clicar em "Home" recarrega o estado inicial
-        
-        ================================================================================
-        */
-    </script>
-
-</body>
-
-</html>
-
+           - Adicione uma opção
