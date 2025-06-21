@@ -1,1 +1,460 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+
+    <!-- Google Font para a fonte Lato -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Reset básico de CSS */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Estilo do menu de navegação */
+        .navMenu {
+            font-family: 'Poppins', sans-serif; /* Fonte principal do menu */
+            padding: 8px 16px; /* Preenchimento interno */
+            display: flex; /* Usa flexbox para layout */
+            justify-content: space-between; /* Espaça os itens do menu */
+            align-items: center; /* Alinha itens verticalmente ao centro */
+            flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha em telas menores */
+            background-color: #f3eec3; /* Cor de fundo */
+            border: 1px solid #849D7F; /* Borda */
+            width: 100%; /* Largura total */
+        }
+
+        /* Estilo dos links dentro do menu */
+        .navMenu .left a,
+        .navMenu .right a {
+            color: #272727; /* Cor do texto */
+            text-decoration: none; /* Remove sublinhado */
+            text-transform: uppercase; /* Transforma texto em maiúsculas */
+            padding: 6px 10px; /* Preenchimento interno */
+            display: inline-block; /* Permite padding e margem */
+        }
+
+        /* Efeito hover nos links */
+        .navMenu a:hover {
+            color: #849D7F; /* Altera a cor do texto ao passar o mouse */
+        }
+
+        /* Estilo do contêiner do menu do lado direito */
+        .navMenu .right {
+            display: flex; /* Usa flexbox para layout */
+            flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
+            gap: 8px; /* Espaçamento entre os itens */
+        }
+
+        /* Responsividade: empilhar os botões em telas pequenas */
+        @media (max-width: 600px) {
+            .navMenu {
+                flex-direction: column; /* Empilha os itens verticalmente */
+                align-items: flex-start; /* Alinha itens à esquerda */
+            }
+
+            .navMenu .right {
+                flex-direction: column; /* Empilha os itens do menu direito verticalmente */
+                align-items: flex-start; /* Alinha itens à esquerda */
+                width: 100%; /* Ocupa a largura total */
+            }
+
+            .navMenu .left,
+            .navMenu .right a {
+                width: 100%; /* Ocupa a largura total */
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Menu de navegação principal -->
+    <nav class="navMenu">
+        <div class="left">
+            <!-- Botão Home/Principal do menu -->
+            <a id="home" onclick="navigate(this.id)" href="#"> 
+                <i id="home-icon" class="fa-solid fa-house"></i> 
+                <span id="home-text">Home</span>
+            </a>
+        </div>
+        <div class="right" id="right-menu">
+            <!-- As opções do menu serão inseridas dinamicamente aqui pelo JavaScript -->
+        </div>
+    </nav>
+
+    <script>
+        /*
+        ================================================================================
+        CONFIGURAÇÃO DO MENU DINÂMICO
+        ================================================================================
+        
+        Esta é a seção principal onde pode editar todas as opções do menu.
+        Para adicionar, editar ou remover opções, modifique o objeto 'menuStates' abaixo.
+        
+        ESTRUTURA DE CADA ESTADO:
+        - Chave: ID único do estado (usado para navegação)
+        - homeText: Texto que aparece no botão principal (lado esquerdo)
+        - homeIcon: Classe do ícone Font Awesome para o botão principal
+        - rightMenuOptions: Array com as opções do menu do lado direito
+        
+        ESTRUTURA DE CADA OPÇÃO:
+        - id: Identificador único da opção
+        - text: Texto visível da opção
+        - icon: Classe do ícone Font Awesome
+        - link: URL de destino (use "#" para ações especiais ou mudanças de estado)
+        */
+        
+        const menuStates = {
+            
+            // ============================================================================
+            // ESTADO PADRÃO (INICIAL)
+            // Este é o estado que aparece quando a página carrega
+            // ============================================================================
+            "default": {
+                homeText: "Home",                    // Texto do botão principal
+                homeIcon: "fa-solid fa-house",       // Ícone do botão principal
+                rightMenuOptions: [                  // Opções do menu direito
+                    { 
+                        id: "tarefas", 
+                        text: "Tarefas", 
+                        icon: "fa-solid fa-list-check", 
+                        link: "https://www.notion.so/Tarefas-21847457f73b802aa447fb79024b77ff?source=copy_link" 
+                    },
+                    { 
+                        id: "biblioteca", 
+                        text: "Biblioteca", 
+                        icon: "fa-solid fa-bookmark", 
+                        link: "https://www.notion.so/Biblioteca-1e8af0392b16804eb4b4ed961f076ab7?pvs=4" 
+                    },
+                    { 
+                        id: "pessoal", 
+                        text: "Pessoal", 
+                        icon: "fa-regular fa-user", 
+                        link: "https://www.notion.so/Pessoal-21947457f73b8050a1f2d2905a17e85e?source=copy_link" 
+                    },
+                    { 
+                        id: "livro", 
+                        text: "Livro", 
+                        icon: "fa-solid fa-book", 
+                        link: "https://www.notion.so/Livro-1e8af0392b1680358974c5f5a25217e2?pvs=4" 
+                    },
+                    { 
+                        id: "database", 
+                        text: "DataBase", 
+                        icon: "fa-solid fa-server", 
+                        link: "https://www.notion.so/DataBase-1e7af0392b1680d0b6c3c382a4ef219b?pvs=4" 
+                    }
+                ]
+            },
+            
+            // ============================================================================
+            // ESTADO PESSOAL
+            // Ativado quando o utilizador clica em "Pessoal" no menu principal
+            // ============================================================================
+            "pessoal": {
+                homeText: "Pessoal",                 // O botão "Home" muda para "Pessoal"
+                homeIcon: "fa-regular fa-user",      // Ícone de utilizador
+                rightMenuOptions: [
+                    { 
+                        id: "viagens", 
+                        text: "Viagens", 
+                        icon: "fa-solid fa-plane", 
+                        link: "#"                    // Use "#" para links temporários
+                    },
+                    { 
+                        id: "financas", 
+                        text: "Finanças", 
+                        icon: "fa-solid fa-money-bill", 
+                        link: "#" 
+                    },
+                    { 
+                        id: "saude", 
+                        text: "Saúde", 
+                        icon: "fa-solid fa-heart-pulse", 
+                        link: "#" 
+                    },
+                    { 
+                        id: "default",               // ID especial para voltar ao estado inicial
+                        text: "Voltar", 
+                        icon: "fa-solid fa-arrow-left", 
+                        link: "#" 
+                    }
+                ]
+            },
+            
+            // ============================================================================
+            // ESTADO TAREFAS
+            // Ativado quando o utilizador clica em "Tarefas" no menu principal
+            // ============================================================================
+            "tarefas": {
+                homeText: "Tarefas",
+                homeIcon: "fa-solid fa-list-check",
+                rightMenuOptions: [
+                    { 
+                        id: "urgentes", 
+                        text: "Urgentes", 
+                        icon: "fa-solid fa-exclamation-triangle", 
+                        link: "#" 
+                    },
+                    { 
+                        id: "projetos", 
+                        text: "Projetos", 
+                        icon: "fa-solid fa-folder", 
+                        link: "#" 
+                    },
+                    { 
+                        id: "concluidas", 
+                        text: "Concluídas", 
+                        icon: "fa-solid fa-check-circle", 
+                        link: "#" 
+                    },
+                    { 
+                        id: "default", 
+                        text: "Voltar", 
+                        icon: "fa-solid fa-arrow-left", 
+                        link: "#" 
+                    }
+                ]
+            },
+            
+            // ============================================================================
+            // ESTADO BIBLIOTECA
+            // Ativado quando o utilizador clica em "Biblioteca" no menu principal
+            // ============================================================================
+            "biblioteca": {
+                homeText: "Biblioteca",
+                homeIcon: "fa-solid fa-bookmark",
+                rightMenuOptions: [
+                    { 
+                        id: "lendo", 
+                        text: "Lendo", 
+                        icon: "fa-solid fa-book-open", 
+                        link: "#" 
+                    },
+                    { 
+                        id: "lidos", 
+                        text: "Lidos", 
+                        icon: "fa-solid fa-check", 
+                        link: "#" 
+                    },
+                    { 
+                        id: "quero-ler", 
+                        text: "Quero Ler", 
+                        icon: "fa-solid fa-bookmark", 
+                        link: "#" 
+                    },
+                    { 
+                        id: "default", 
+                        text: "Voltar", 
+                        icon: "fa-solid fa-arrow-left", 
+                        link: "#" 
+                    }
+                ]
+            }
+            
+            /*
+            ============================================================================
+            COMO ADICIONAR UM NOVO ESTADO:
+            ============================================================================
+            
+            1. Adicione uma vírgula após o último estado (depois da chave "biblioteca")
+            2. Adicione um novo objeto seguindo este modelo:
+            
+            "novo_estado": {
+                homeText: "Novo Estado",
+                homeIcon: "fa-solid fa-nova-icone",
+                rightMenuOptions: [
+                    { 
+                        id: "opcao1", 
+                        text: "Opção 1", 
+                        icon: "fa-solid fa-icone1", 
+                        link: "https://exemplo.com" 
+                    },
+                    { 
+                        id: "opcao2", 
+                        text: "Opção 2", 
+                        icon: "fa-solid fa-icone2", 
+                        link: "#" 
+                    },
+                    { 
+                        id: "default", 
+                        text: "Voltar", 
+                        icon: "fa-solid fa-arrow-left", 
+                        link: "#" 
+                    }
+                ]
+            }
+            
+            3. Para ativar este novo estado, adicione uma opção no estado "default" 
+               com id: "novo_estado"
+            
+            ÍCONES DISPONÍVEIS:
+            - Utilize qualquer ícone do Font Awesome 6.2.0
+            - Exemplos: fa-solid fa-home, fa-regular fa-user, fa-solid fa-cog
+            - Lista completa: https://fontawesome.com/icons
+            */
+        };
+
+        /*
+        ================================================================================
+        VARIÁVEIS DE CONTROLO
+        ================================================================================
+        */
+        
+        // Variável para manter o controle do estado atual do menu
+        let currentState = "default";
+
+        /*
+        ================================================================================
+        FUNÇÕES PRINCIPAIS DO MENU
+        ================================================================================
+        */
+
+        /**
+         * Atualiza o menu de navegação com base no estado fornecido.
+         * Esta função é chamada sempre que o utilizador navega para um novo estado.
+         * 
+         * @param {string} state - O ID do estado do menu a ser carregado (ex: 'default', 'pessoal')
+         */
+        function updateMenu(state) {
+            // Obtém a configuração do menu para o estado especificado
+            const menuConfig = menuStates[state];
+            
+            // Se o estado não existir, sai da função sem fazer nada
+            if (!menuConfig) return;
+
+            // ========================================================================
+            // ATUALIZAR O BOTÃO HOME (LADO ESQUERDO)
+            // ========================================================================
+            
+            // Obtém os elementos HTML do botão home
+            const homeIcon = document.getElementById('home-icon');
+            const homeText = document.getElementById('home-text');
+            
+            // Atualiza o ícone e o texto do botão home
+            homeIcon.className = menuConfig.homeIcon;  // Define a classe do ícone
+            homeText.textContent = menuConfig.homeText; // Define o texto
+
+            // ========================================================================
+            // ATUALIZAR O MENU DO LADO DIREITO
+            // ========================================================================
+            
+            // Obtém o contêiner do menu do lado direito
+            const rightMenu = document.getElementById('right-menu');
+            
+            // Limpa todo o conteúdo atual do menu direito
+            rightMenu.innerHTML = '';
+
+            // Adiciona cada opção do novo estado ao menu direito
+            menuConfig.rightMenuOptions.forEach(option => {
+                // Cria um novo elemento <a> (link)
+                const link = document.createElement('a');
+                link.id = option.id;                    // Define o ID do link
+                link.href = '#';                        // Define href como '#' para evitar recarregamento
+                link.onclick = () => navigate(option.id); // Atribui a função de navegação ao clique
+                
+                // Cria um novo elemento <i> para o ícone
+                const icon = document.createElement('i');
+                icon.className = option.icon;           // Define a classe do ícone
+                
+                // Adiciona o ícone ao link
+                link.appendChild(icon);
+                
+                // Adiciona o texto da opção ao link (com um espaço antes)
+                link.appendChild(document.createTextNode(' ' + option.text));
+                
+                // Adiciona o link completo ao contêiner do menu direito
+                rightMenu.appendChild(link);
+            });
+
+            // Atualiza a variável de estado atual
+            currentState = state;
+        }
+
+        /**
+         * Função de navegação que lida com os cliques nos itens do menu.
+         * Determina se deve mudar o estado do menu ou abrir um link externo.
+         * 
+         * @param {string} id - O ID do item do menu clicado
+         */
+        function navigate(id) {
+            // ========================================================================
+            // VERIFICAR SE É UMA MUDANÇA DE ESTADO
+            // ========================================================================
+            
+            // Verifica se o ID clicado corresponde a um estado de menu definido
+            if (menuStates[id]) {
+                // Se sim, atualiza o menu para o novo estado
+                updateMenu(id);
+                return; // Sai da função, pois o menu foi atualizado
+            }
+
+            // ========================================================================
+            // PROCESSAR LINK EXTERNO
+            // ========================================================================
+            
+            // Se não é uma mudança de estado, procura o link na configuração atual
+            const currentConfig = menuStates[currentState];
+            const option = currentConfig.rightMenuOptions.find(opt => opt.id === id);
+            
+            // Se encontrou a opção e ela tem um link válido, abre o link
+            if (option && option.link && option.link !== '#') {
+                window.open(option.link, '_blank').focus(); // Abre em nova aba
+            }
+        }
+
+        /*
+        ================================================================================
+        INICIALIZAÇÃO
+        ================================================================================
+        */
+
+        /**
+         * Event Listener que garante que o menu seja inicializado corretamente
+         * quando o conteúdo da página estiver completamente carregado.
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carrega o estado 'default' do menu ao iniciar a página
+            updateMenu('default');
+        });
+
+        /*
+        ================================================================================
+        NOTAS PARA PERSONALIZAÇÃO:
+        ================================================================================
+        
+        1. ADICIONAR NOVAS OPÇÕES:
+           - Edite o array 'rightMenuOptions' do estado desejado
+           - Adicione um novo objeto com id, text, icon e link
+        
+        2. MODIFICAR OPÇÕES EXISTENTES:
+           - Encontre a opção no estado correspondente
+           - Altere text, icon ou link conforme necessário
+        
+        3. REMOVER OPÇÕES:
+           - Apague o objeto da opção do array 'rightMenuOptions'
+        
+        4. CRIAR NOVOS ESTADOS:
+           - Adicione um novo objeto ao 'menuStates'
+           - Adicione uma opção no estado 'default' para aceder ao novo estado
+        
+        5. ALTERAR CORES E ESTILOS:
+           - Modifique as regras CSS na seção <style> no início do ficheiro
+        
+        ================================================================================
+        */
+    </script>
+
+</body>
+
+</html>
+
 
