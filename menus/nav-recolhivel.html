@@ -1,69 +1,67 @@
-O problema está na lógica da função `navigate` no seu JavaScript. A ordem das verificações faz com que o botão "Home" (e outros links que deveriam abrir um `mainLink` ou um link externo) apenas atualize o estado do menu, em vez de abrir o link.
-
-A sua função `navigate` primeiro verifica se o `id` clicado corresponde a um estado de menu (`if (menuStates[id])`). Se for o caso (como "default", "tarefas", "pessoal"), ela chama `updateMenu(id)` e retorna, sem nunca chegar à parte que verifica o `mainLink` do botão esquerdo ou os links externos das opções.
-
-Para corrigir isso, precisamos reordenar as verificações na função `navigate`. Primeiro, verificamos se o clique foi no botão "Home" (o botão esquerdo que representa o estado atual) para abrir o `mainLink` associado. Depois, verificamos se é uma mudança para um novo estado de menu. Por último, tratamos os links externos das opções do menu.
-
-Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` foi alterada.
+Com certeza! Aqui está o código HTML completo, funcional e totalmente comentado, incluindo a correção na função `navigate` para garantir que todos os links, especialmente o do botão "Home", funcionem como esperado.
 
 ```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
-    <!-- Font Awesome para ícones -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu de Navegação Dinâmico</title>
+
+    <!-- Font Awesome para ícones: Carrega a biblioteca de ícones Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 
-    <!-- Google Font para a fonte Lato -->
+    <!-- Google Font para a fonte Lato: Carrega a fonte Lato do Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@700&display=swap" rel="stylesheet">
 
     <style>
-        /* Reset básico de CSS */
+        /* Reset básico de CSS: Remove margens e preenchimentos padrão e define box-sizing */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* Estilo do menu de navegação */
+        /* Estilo do menu de navegação principal */
         .navMenu {
             font-family: 'Poppins', sans-serif; /* Fonte principal do menu */
             padding: 8px 16px; /* Preenchimento interno */
-            display: flex; /* Usa flexbox para layout */
-            justify-content: space-between; /* Espaça os itens do menu */
+            display: flex; /* Usa flexbox para layout flexível */
+            justify-content: space-between; /* Espaça os itens do menu (esquerda e direita) */
             align-items: center; /* Alinha itens verticalmente ao centro */
             flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha em telas menores */
-            background-color: #f3eec3; /* Cor de fundo */
-            border: 1px solid #849D7F; /* Borda */
-            width: 100%; /* Largura total */
+            background-color: #f3eec3; /* Cor de fundo do menu */
+            border: 1px solid #849D7F; /* Borda do menu */
+            width: 100%; /* Ocupa a largura total disponível */
         }
 
-        /* Estilo dos links dentro do menu */
+        /* Estilo dos links dentro do menu (tanto do lado esquerdo quanto do direito) */
         .navMenu .left a,
         .navMenu .right a {
-            color: #272727; /* Cor do texto */
-            text-decoration: none; /* Remove sublinhado */
-            text-transform: uppercase; /* Transforma texto em maiúsculas */
-            padding: 6px 10px; /* Preenchimento interno */
-            display: inline-block; /* Permite padding e margem */
-            cursor: pointer; /* Mostra cursor de ponteiro para indicar que é clicável */
+            color: #272727; /* Cor do texto dos links */
+            text-decoration: none; /* Remove o sublinhado padrão dos links */
+            text-transform: uppercase; /* Transforma o texto em maiúsculas */
+            padding: 6px 10px; /* Preenchimento interno para os links */
+            display: inline-block; /* Permite aplicar padding e margem corretamente */
+            cursor: pointer; /* Mostra o cursor de ponteiro para indicar que é clicável */
         }
 
-        /* Efeito hover nos links */
+        /* Efeito hover nos links: Altera a cor do texto ao passar o mouse */
         .navMenu a:hover {
-            color: #849D7F; /* Altera a cor do texto ao passar o mouse */
+            color: #849D7F; /* Nova cor do texto ao passar o mouse */
         }
 
         /* Estilo do contêiner do menu do lado direito */
         .navMenu .right {
             display: flex; /* Usa flexbox para layout */
             flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
-            gap: 8px; /* Espaçamento entre os itens */
+            gap: 8px; /* Espaçamento entre os itens do menu direito */
         }
 
-        /* Responsividade: empilhar os botões em telas pequenas */
+        /* Responsividade: Estilos aplicados quando a largura da tela é de 600px ou menos */
         @media (max-width: 600px) {
             .navMenu {
                 flex-direction: column; /* Empilha os itens verticalmente */
@@ -90,6 +88,7 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
     <nav class="navMenu">
         <div class="left">
             <!-- Botão Home/Principal do menu - AGORA DINÂMICO E CLICÁVEL -->
+            <!-- O ID 'default' será atualizado pelo JavaScript para refletir o estado atual -->
             <a id="default" onclick="navigate(this.id)" href="#"> 
                 <i id="home-icon" class="fa-solid fa-house"></i> 
                 <span id="home-text">Home</span>
@@ -106,22 +105,26 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
         CONFIGURAÇÃO DO MENU DINÂMICO
         ================================================================================
         
-        Esta é a seção principal onde pode editar todas as opções do menu.
+        Esta é a seção principal onde você pode editar todas as opções do menu.
         Para adicionar, editar ou remover opções, modifique o objeto 'menuStates' abaixo.
         
         ESTRUTURA DE CADA ESTADO:
-        - Chave: ID único do estado (usado para navegação)
+        - Chave: ID único do estado (usado para navegação e para o botão esquerdo)
         - homeText: Texto que aparece no botão principal (lado esquerdo)
         - homeIcon: Classe do ícone Font Awesome para o botão principal
+        - mainLink: URL de destino para o botão principal (lado esquerdo) quando clicado.
+                    Use "#" se o botão principal não deve ter um link direto.
         - rightMenuOptions: Array com as opções do menu do lado direito
         
-        ESTRUTURA DE CADA OPÇÃO:
-        - id: Identificador único da opção
+        ESTRUTURA DE CADA OPÇÃO DENTRO DE 'rightMenuOptions':
+        - id: Identificador único da opção. Se este ID corresponder a uma chave em 'menuStates',
+              clicar nele mudará o estado do menu.
         - text: Texto visível da opção
-        - icon: Classe do ícone Font Awesome (APENAS as classes, não o HTML completo)
-        - link: URL de destino (use "#" para ações especiais ou mudanças de estado)
+        - icon: Classe do ícone Font Awesome (APENAS as classes, não o HTML completo, ex: "fa-solid fa-bookmark")
+        - link: URL de destino. Se for "#", a função 'navigate' verificará se o 'id' corresponde
+                a um estado de menu para mudar o menu, ou não fará nada se for apenas um placeholder.
         
-        IMPORTANTE: O botão do lado esquerdo agora é CLICÁVEL e navega para o estado atual!
+        IMPORTANTE: O botão do lado esquerdo agora é CLICÁVEL e navega para o 'mainLink' do estado atual!
         */
         
         const menuStates = {
@@ -133,37 +136,37 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
             "default": {
                 homeText: "Home",                    // Texto do botão principal
                 homeIcon: "fa-solid fa-house",       // Ícone do botão principal
-                mainLink: "https://www.notion.so/Sol-de-S-ter-21747457f73b80fab549e06915a043b0?source=copy_link",                       // Link principal do estado (para o botão esquerdo)
+                mainLink: "https://www.notion.so/Sol-de-S-ter-21747457f73b80fab549e06915a043b0?source=copy_link", // Link principal do estado (para o botão esquerdo)
                 rightMenuOptions: [                  // Opções do menu direito
                     { 
                         id: "tarefas", 
                         text: "Tarefas", 
                         icon: "fa-solid fa-list-check", 
-                        link: "#"  // Mudado para "#" para navegar para o estado
+                        link: "#"  // '#' indica que clicar mudará o estado do menu para 'tarefas'
                     },
                     { 
                         id: "biblioteca", 
                         text: "Biblioteca", 
                         icon: "fa-solid fa-bookmark", 
-                        link: "#"  // Mudado para "#" para navegar para o estado
+                        link: "#"  // '#' indica que clicar mudará o estado do menu para 'biblioteca'
                     },
                     { 
                         id: "pessoal", 
                         text: "Pessoal", 
                         icon: "fa-regular fa-user", 
-                        link: "#"  // Mudado para "#" para navegar para o estado
+                        link: "#"  // '#' indica que clicar mudará o estado do menu para 'pessoal'
                     },
                     { 
                         id: "livro", 
                         text: "Livro", 
                         icon: "fa-solid fa-book", 
-                        link: "https://www.notion.so/Livro-1e8af0392b1680358974c5f5a25217e2?pvs=4" 
+                        link: "https://www.notion.so/Livro-1e8af0392b1680358974c5f5a25217e2?pvs=4" // Link direto para uma URL externa
                     },
                     { 
                         id: "database", 
                         text: "DataBase", 
                         icon: "fa-solid fa-server", 
-                        link: "https://www.notion.so/DataBase-1e7af0392b1680d0b6c3c382a4ef219b?pvs=4" 
+                        link: "https://www.notion.so/DataBase-1e7af0392b1680d0b6c3c382a4ef219b?pvs=4" // Link direto para uma URL externa
                     }
                 ]
             },
@@ -175,13 +178,13 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
             "pessoal": {
                 homeText: "Pessoal",                 // O botão "Home" muda para "Pessoal"
                 homeIcon: "fa-regular fa-user",      // Ícone de utilizador
-                mainLink: "https://www.notion.so/Pessoal-21947457f73b8050a1f2d2905a17e85e?source=copy_link", // Link principal
+                mainLink: "https://www.notion.so/Pessoal-21947457f73b8050a1f2d2905a17e85e?source=copy_link", // Link principal para o estado "Pessoal"
                 rightMenuOptions: [
                     { 
                         id: "viagens", 
                         text: "Viagens", 
                         icon: "fa-solid fa-plane", 
-                        link: "#"                    // Use "#" para links temporários
+                        link: "#"                    // Use "#" para links temporários ou que não mudam o estado
                     },
                     { 
                         id: "financas", 
@@ -199,7 +202,7 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
                         id: "default",               // ID especial para voltar ao estado inicial
                         text: "Voltar", 
                         icon: "fa-solid fa-arrow-left", 
-                        link: "#" 
+                        link: "#" // '#' indica que clicar mudará o estado do menu para 'default'
                     }
                 ]
             },
@@ -211,13 +214,13 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
             "tarefas": {
                 homeText: "Tarefas",
                 homeIcon: "fa-solid fa-list-check",
-                mainLink: "https://www.notion.so/Tarefas-21847457f73b802aa447fb79024b77ff?source=copy_link", // Link principal
+                mainLink: "https://www.notion.so/Tarefas-21847457f73b802aa447fb79024b77ff?source=copy_link", // Link principal para o estado "Tarefas"
                 rightMenuOptions: [
                     { 
                         id: "habitos", 
                         text: "Hábitos", 
-                        icon: "fa-solid fa-stopwatch",  // CORRIGIDO: apenas as classes CSS
-                        link: "https://www.notion.so/H-bitos-21947457f73b8084ab09e128ad7faf4b?source=copy_link" 
+                        icon: "fa-solid fa-stopwatch",  // Apenas as classes CSS do ícone
+                        link: "https://www.notion.so/H-bitos-21947457f73b8084ab09e128ad7faf4b?source=copy_link" // Link direto
                     },
                     { 
                         id: "projetos", 
@@ -247,7 +250,7 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
             "biblioteca": {
                 homeText: "Biblioteca",
                 homeIcon: "fa-solid fa-bookmark",
-                mainLink: "https://www.notion.so/Biblioteca-1e8af0392b16804eb4b4ed961f076ab7?pvs=4", // Link principal
+                mainLink: "https://www.notion.so/Biblioteca-1e8af0392b16804eb4b4ed961f076ab7?pvs=4", // Link principal para o estado "Biblioteca"
                 rightMenuOptions: [
                     { 
                         id: "lendo", 
@@ -287,6 +290,7 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
             "novo_estado": {
                 homeText: "Novo Estado",
                 homeIcon: "fa-solid fa-nova-icone",
+                mainLink: "https://link-principal-do-novo-estado.com", // Defina o link principal
                 rightMenuOptions: [
                     { 
                         id: "opcao1", 
@@ -298,7 +302,7 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
                         id: "opcao2", 
                         text: "Opção 2", 
                         icon: "fa-solid fa-icone2", 
-                        link: "#" 
+                        link: "#" // Se for um link que muda para outro estado ou não faz nada
                     },
                     { 
                         id: "default", 
@@ -310,7 +314,8 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
             }
             
             3. Para ativar este novo estado, adicione uma opção no estado "default" 
-               com id: "novo_estado"
+               (ou em qualquer outro estado de onde você queira acessá-lo)
+               com id: "novo_estado" e link: "#".
             
             ÍCONES DISPONÍVEIS:
             - Utilize qualquer ícone do Font Awesome 6.2.0
@@ -321,12 +326,6 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
             - Use APENAS as classes CSS: "fa-solid fa-stopwatch"
             - NÃO use o HTML completo: "<i class='fa-solid fa-stopwatch'></i>"
             - O JavaScript criará automaticamente o elemento <i> com as classes
-            
-            BOTÃO ESQUERDO CLICÁVEL:
-            - O botão do lado esquerdo agora é clicável
-            - Ao clicar nele, abre o link principal do estado atual
-            - Exemplo: No estado "tarefas", clicar em "Tarefas" abre o link do Notion
-            - No estado "default", clicar em "Home" recarrega o estado inicial
             */
         };
 
@@ -348,7 +347,7 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
         /**
          * Atualiza o menu de navegação com base no estado fornecido.
          * Esta função é chamada sempre que o utilizador navega para um novo estado.
-         * NOVA FUNCIONALIDADE: Agora também atualiza o ID do botão esquerdo para torná-lo clicável.
+         * Ela atualiza o botão esquerdo (Home) e as opções do menu direito.
          * 
          * @param {string} state - O ID do estado do menu a ser carregado (ex: 'default', 'pessoal')
          */
@@ -356,8 +355,11 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
             // Obtém a configuração do menu para o estado especificado
             const menuConfig = menuStates[state];
             
-            // Se o estado não existir, sai da função sem fazer nada
-            if (!menuConfig) return;
+            // Se o estado não existir no 'menuStates', sai da função sem fazer nada
+            if (!menuConfig) {
+                console.error(`Estado de menu '${state}' não encontrado.`);
+                return;
+            }
 
             // ========================================================================
             // ATUALIZAR O BOTÃO HOME (LADO ESQUERDO) - AGORA DINÂMICO E CLICÁVEL
@@ -368,15 +370,17 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
             const homeIcon = document.getElementById('home-icon');
             const homeText = document.getElementById('home-text');
             
-            // NOVA FUNCIONALIDADE: Atualiza o ID do botão para corresponder ao estado atual
-            // Isso permite que o botão seja clicável e navegue para o estado correspondente
+            // Atualiza o ID do botão esquerdo para corresponder ao estado atual.
+            // Isso é crucial para que a função 'navigate' possa identificar o clique no botão "Home".
             if (homeButton) {
                 homeButton.id = state;
             }
             
-            // Atualiza o ícone e o texto do botão home
+            // Atualiza o ícone e o texto do botão home com base na configuração do estado
             homeIcon.className = menuConfig.homeIcon;  // Define a classe do ícone
             homeText.textContent = menuConfig.homeText; // Define o texto
+            // O 'href' do homeButton permanece '#' pois a navegação é controlada pelo 'onclick'
+            // e pela função 'navigate' para lidar com 'mainLink'.
 
             // ========================================================================
             // ATUALIZAR O MENU DO LADO DIREITO
@@ -385,73 +389,99 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
             // Obtém o contêiner do menu do lado direito
             const rightMenu = document.getElementById('right-menu');
             
-            // Limpa todo o conteúdo atual do menu direito
+            // Limpa todo o conteúdo atual do menu direito para inserir as novas opções
             rightMenu.innerHTML = '';
 
             // Adiciona cada opção do novo estado ao menu direito
             menuConfig.rightMenuOptions.forEach(option => {
-                // Cria um novo elemento <a> (link)
+                // Cria um novo elemento <a> (link) para cada opção
                 const link = document.createElement('a');
-                link.id = option.id;                    // Define o ID do link
-                link.href = '#';                        // Define href como '#' para evitar recarregamento
+                link.id = option.id;                    // Define o ID do link (importante para a função navigate)
+                link.href = '#';                        // Define href como '#' para evitar recarregamento da página
                 link.onclick = () => navigate(option.id); // Atribui a função de navegação ao clique
                 
                 // Cria um novo elemento <i> para o ícone
                 const icon = document.createElement('i');
-                icon.className = option.icon;           // Define a classe do ícone
+                icon.className = option.icon;           // Define a classe do ícone (ex: "fa-solid fa-list-check")
                 
                 // Adiciona o ícone ao link
                 link.appendChild(icon);
                 
-                // Adiciona o texto da opção ao link (com um espaço antes)
+                // Adiciona o texto da opção ao link (com um espaço antes para separação visual)
                 link.appendChild(document.createTextNode(' ' + option.text));
                 
-                // Adiciona o link completo ao contêiner do menu direito
+                // Adiciona o link completo (com ícone e texto) ao contêiner do menu direito
                 rightMenu.appendChild(link);
             });
 
-            // Atualiza a variável de estado atual
+            // Atualiza a variável de estado atual para o novo estado carregado
             currentState = state;
         }
 
         /**
          * Função de navegação que lida com os cliques nos itens do menu.
-         * Determina se deve mudar o estado do menu ou abrir um link externo.
+         * Esta é a função central que determina se um clique deve:
+         * 1. Abrir o 'mainLink' do estado atual (se clicado no botão esquerdo).
+         * 2. Mudar para um novo estado de menu.
+         * 3. Abrir um link externo direto de uma opção do menu direito.
          * 
-         * @param {string} id - O ID do item do menu clicado
+         * @param {string} id - O ID do item do menu clicado (pode ser o ID de um estado ou de uma opção)
          */
         function navigate(id) {
-            const currentConfig = menuStates[currentState]; // Obtém a configuração do estado atual uma vez
+            // Obtém a configuração do estado de menu atualmente ativo.
+            // Fazemos isso uma vez para evitar múltiplas chamadas.
+            const currentConfig = menuStates[currentState];
 
-            // Caso 1: Clique no botão "Home" (lado esquerdo) para o *estado atual*
-            // Isso lida com o mainLink para o estado de menu atualmente ativo.
+            // ========================================================================
+            // CENÁRIO 1: Clique no botão "Home" (lado esquerdo) para o *estado atual*
+            // ========================================================================
+            // Se o ID clicado é o mesmo que o estado atual (significa que o botão esquerdo foi clicado)
             if (id === currentState) {
+                // Verifica se o estado atual tem um 'mainLink' definido e se não é um placeholder '#'
                 if (currentConfig.mainLink && currentConfig.mainLink !== '#') {
+                    // Abre o 'mainLink' em uma nova aba e foca nela
                     window.open(currentConfig.mainLink, '_blank').focus();
-                    return; // Sai após abrir o link
+                    return; // Sai da função, pois a ação de navegação foi concluída
                 }
-                // Se mainLink for '#' ou não definido, apenas renderiza novamente o estado atual (sem navegação real)
+                // Se o 'mainLink' for '#' ou não estiver definido,
+                // apenas re-renderiza o menu para o estado atual (útil para "recarregar" o estado visualmente)
                 updateMenu(id);
-                return;
+                return; // Sai da função
             }
 
-            // Caso 2: Clique em uma opção que corresponde a um *novo* estado de menu (ex: "Tarefas", "Pessoal")
-            // Isso muda toda a estrutura do menu.
+            // ========================================================================
+            // CENÁRIO 2: Clique em uma opção que corresponde a um *novo* estado de menu
+            // ========================================================================
+            // Verifica se o ID clicado corresponde a uma chave de estado válida em 'menuStates'.
+            // Ex: Se 'id' for "tarefas", e "tarefas" é uma chave em 'menuStates'.
             if (menuStates[id]) {
-                updateMenu(id); // Muda para o novo estado do menu
-                return;
+                // Se sim, atualiza o menu para o novo estado, mudando todas as opções e o botão esquerdo
+                updateMenu(id); 
+                return; // Sai da função, pois o menu foi atualizado
             }
 
-            // Caso 3: Clique em uma opção no menu direito que leva a um *link externo*
-            // Isso lida com links externos diretos dentro das opções do menu atual.
+            // ========================================================================
+            // CENÁRIO 3: Clique em uma opção no menu direito que leva a um *link externo*
+            // ========================================================================
+            // Se não foi um clique no botão esquerdo e não foi uma mudança de estado,
+            // procura a opção clicada dentro das 'rightMenuOptions' do *estado atual*.
             const option = currentConfig.rightMenuOptions.find(opt => opt.id === id);
+            
+            // Se a opção foi encontrada E ela tem um 'link' definido E esse 'link' não é um placeholder '#'
             if (option && option.link && option.link !== '#') {
-                window.open(option.link, '_blank').focus(); // Abre o link externo
-                return;
+                // Abre o link externo em uma nova aba e foca nela
+                window.open(option.link, '_blank').focus(); 
+                return; // Sai da função
             }
 
-            // Se nenhuma das opções acima, é provável que seja um link de espaço reservado ('#') que não
-            // aciona uma mudança de estado ou um link externo, então nenhuma ação é necessária aqui.
+            // ========================================================================
+            // CENÁRIO 4: Nenhuma ação (link placeholder ou ID desconhecido)
+            // ========================================================================
+            // Se nenhuma das condições acima foi atendida, significa que o clique foi em um link
+            // que tem '#' como destino e não corresponde a um estado de menu.
+            // Nenhuma ação adicional é necessária, pois é um link de espaço reservado.
+            // Você pode adicionar um console.log aqui para depuração, se desejar.
+            // console.log(`Clique no ID '${id}' não resultou em navegação ou mudança de estado.`);
         }
 
         /*
@@ -463,28 +493,15 @@ Aqui está o código HTML e JavaScript corrigido. Apenas a função `navigate` f
         /**
          * Event Listener que garante que o menu seja inicializado corretamente
          * quando o conteúdo da página estiver completamente carregado.
+         * Isso evita erros de elementos não encontrados no DOM.
          */
         document.addEventListener('DOMContentLoaded', function() {
             // Carrega o estado 'default' do menu ao iniciar a página
             updateMenu('default');
         });
+    </script>
 
-        /*
-        ================================================================================
-        NOTAS PARA PERSONALIZAÇÃO:
-        ================================================================================
-        
-        1. ADICIONAR NOVAS OPÇÕES:
-           - Edite o array 'rightMenuOptions' do estado desejado
-           - Adicione um novo objeto com id, text, icon e link
-        
-        2. MODIFICAR OPÇÕES EXISTENTES:
-           - Encontre a opção no estado correspondente
-           - Altere text, icon ou link conforme necessário
-        
-        3. REMOVER OPÇÕES:
-           - Apague o objeto da opção do array 'rightMenuOptions'
-        
-        4. CRIAR NOVOS ESTADOS:
-           - Adicione um novo objeto ao 'menuStates'
-           - Adicione uma opção
+</body>
+
+</html>
+```
