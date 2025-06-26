@@ -1,0 +1,170 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    background: #2c3e50;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.widget-container {
+    width: 1300px;
+    height: 400px;
+    position: relative;
+    background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 70%, #8FBC8F 100%);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: 3px solid #34495e;
+}
+
+.mountain-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        /* Montanhas distantes */
+        linear-gradient(45deg, transparent 40%, #8B7355 40%, #8B7355 60%, transparent 60%),
+        linear-gradient(-45deg, transparent 30%, #A0522D 30%, #A0522D 70%, transparent 70%),
+        /* Montanhas mÃ©dias */
+        linear-gradient(30deg, transparent 50%, #654321 50%, #654321 80%, transparent 80%),
+        /* Montanhas prÃ³ximas */
+        linear-gradient(-30deg, transparent 60%, #2F4F2F 60%, #2F4F2F 90%, transparent 90%);
+    background-size: 
+        400px 200px,
+        350px 180px,
+        300px 160px,
+        250px 140px;
+    background-position: 
+        200px 50px,
+        600px 40px,
+        1000px 60px,
+        100px 80px;
+    background-repeat: no-repeat;
+}
+
+.character-container {
+    position: absolute;
+    bottom: 80px;
+    left: 50px;
+    width: 64px;
+    height: 64px;
+}
+
+.character {
+    width: 64px;
+    height: 64px;
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPCEtLSBDYWJlw6dhIC0tPgo8cmVjdCB4PSIyNCIgeT0iOCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjgiIGZpbGw9IiMyMzFmMjAiLz4KPCEtLSBSb3N0byAtLT4KPHJlY3QgeD0iMjAiIHk9IjE2IiB3aWR0aD0iMjQiIGhlaWdodD0iMTYiIGZpbGw9IiNEMjY5MUUiLz4KPCEtLSBPbGhvcyAtLT4KPHJlY3QgeD0iMjQiIHk9IjIwIiB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjMDAwIi8+CjxyZWN0IHg9IjM2IiB5PSIyMCIgd2lkdGg9IjQiIGhlaWdodD0iNCIgZmlsbD0iIzAwMCIvPgo8IS0tIENvcnBvIC0tPgo8cmVjdCB4PSIyMCIgeT0iMzIiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyMCIgZmlsbD0iIzIyOEIyMiIvPgo8IS0tIEJyYcOnb3MgLS0+CjxyZWN0IHg9IjEyIiB5PSIzNiIgd2lkdGg9IjgiIGhlaWdodD0iMTIiIGZpbGw9IiNEMjY5MUUiLz4KPHJlY3QgeD0iNDQiIHk9IjM2IiB3aWR0aD0iOCIgaGVpZ2h0PSIxMiIgZmlsbD0iI0QyNjkxRSIvPgo8IS0tIFBlcm5hcyAtLT4KPHJlY3QgeD0iMjQiIHk9IjUyIiB3aWR0aD0iOCIgaGVpZ2h0PSIxMiIgZmlsbD0iI0QyNjkxRSIvPgo8cmVjdCB4PSIzMiIgeT0iNTIiIHdpZHRoPSI4IiBoZWlnaHQ9IjEyIiBmaWxsPSIjRDI2OTFFIi8+CjwhLS0gUMOpcyAtLT4KPHJlY3QgeD0iMjAiIHk9IjYwIiB3aWR0aD0iMTIiIGhlaWdodD0iNCIgZmlsbD0iIzY1NDMyMSIvPgo8cmVjdCB4PSIzMiIgeT0iNjAiIHdpZHRoPSIxMiIgaGVpZ2h0PSI0IiBmaWxsPSIjNjU0MzIxIi8+Cjwvc3ZnPg==');
+    background-size: contain;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    animation: walk 2s infinite;
+}
+
+@keyframes walk {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    25% {
+        transform: translateY(-2px) scaleX(1.05);
+    }
+    50% {
+        transform: translateY(0px);
+    }
+    75% {
+        transform: translateY(-2px) scaleX(0.95);
+    }
+}
+
+.character-container {
+    animation: moveAcross 15s infinite linear;
+}
+
+@keyframes moveAcross {
+    0% {
+        left: -64px;
+    }
+    100% {
+        left: 1300px;
+    }
+}
+
+.widget-info {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 14px;
+    max-width: 250px;
+}
+
+.widget-info h3 {
+    margin-bottom: 8px;
+    color: #FFD700;
+    font-size: 18px;
+}
+
+.widget-info p {
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Nuvens animadas */
+.widget-container::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-image: 
+        radial-gradient(ellipse 80px 30px at 100px 30px, rgba(255,255,255,0.8) 0%, transparent 50%),
+        radial-gradient(ellipse 60px 20px at 300px 40px, rgba(255,255,255,0.6) 0%, transparent 50%),
+        radial-gradient(ellipse 100px 35px at 500px 25px, rgba(255,255,255,0.7) 0%, transparent 50%),
+        radial-gradient(ellipse 70px 25px at 800px 35px, rgba(255,255,255,0.5) 0%, transparent 50%),
+        radial-gradient(ellipse 90px 30px at 1100px 30px, rgba(255,255,255,0.6) 0%, transparent 50%);
+    animation: clouds 20s infinite linear;
+}
+
+@keyframes clouds {
+    0% {
+        transform: translateX(-100px);
+    }
+    100% {
+        transform: translateX(100px);
+    }
+}
+
+/* Efeito de parallax nas montanhas */
+.mountain-background {
+    animation: parallax 30s infinite linear;
+}
+
+@keyframes parallax {
+    0% {
+        background-position: 
+            200px 50px,
+            600px 40px,
+            1000px 60px,
+            100px 80px;
+    }
+    100% {
+        background-position: 
+            150px 50px,
+            550px 40px,
+            950px 60px,
+            50px 80px;
+    }
+}
