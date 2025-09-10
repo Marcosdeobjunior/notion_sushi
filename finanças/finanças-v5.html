@@ -2019,11 +2019,14 @@
 
         // Funções de cálculo existentes (continuam as mesmas)
         function calcularSaldoDia(data) {
+            // Calcular o saldo até o final do dia especificado
+            const dataFimDia = new Date(data);
+            dataFimDia.setHours(23, 59, 59, 999);
+            
             let saldo = estado.saldoInicial;
             
-            // Somar todas as transações até a data especificada (inclusive)
             for (const transacao of estado.transacoes) {
-                if (transacao.data <= data) {
+                if (transacao.data <= dataFimDia) {
                     if (transacao.tipo === 'entrada') {
                         saldo += transacao.valor;
                     } else {
@@ -2036,50 +2039,86 @@
         }
 
         function calcularSaldoFuturo(data) {
+            // Calcular o saldo considerando todas as transações futuras até o final do mês
             const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
+            const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
             
-            // Se a data é no passado ou hoje, usar cálculo normal
-            if (data <= hoje) {
-                return calcularSaldoDia(data);
-            }
+            let saldo = calcularSaldoDia(data);
             
-            // Para datas futuras, calcular saldo atual e subtrair contas futuras conhecidas
-            let saldoAtual = calcularSaldoDia(hoje);
-            
-            // Subtrair todas as saídas futuras já programadas até a data especificada
-            const saidasFuturas = estado.transacoes.filter(t => 
-                t.tipo === 'saida' && 
-                t.data > hoje && 
-                t.data <= data
+            // Considerar apenas transações futuras dentro do mês atual
+            const transacoesFuturas = estado.transacoes.filter(t => 
+                t.data > data && 
+                t.data <= ultimoDiaMes && 
+                t.data.getMonth() === hoje.getMonth() && 
+                t.data.getFullYear() === hoje.getFullYear()
             );
             
-            const totalSaidasFuturas = saidasFuturas.reduce((total, t) => total + t.valor, 0);
+            // Subtrair apenas as saídas futuras
+            for (const transacao of transacoesFuturas) {
+                if (transacao.tipo === 'saida') {
+                    saldo -= transacao.valor;
+                }
+            }
             
-            return saldoAtual - totalSaidasFuturas;
+            return saldo;
         }
 
-        function verificarContasQuitadas(dataReferencia) {
-            const fimDoMes = new Date(dataReferencia.getFullYear(), dataReferencia.getMonth() + 1, 0);
-            const saldoFinalMes = calcularSaldoFuturo(fimDoMes);
+        function verificarContasQuitadas(data) {
+            // Verificar se todas as contas até o final do mês estão quitadas ou podem ser quitadas
+            const hoje = new Date();
+            const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
             
-            // Verificar se o saldo final do mês será suficiente para manter uma reserva de R$ 200
-            return saldoFinalMes >= 200;
+            // Obter todas as saídas (contas) do mês atual, incluindo as já passadas
+            const todasSaidasMes = estado.transacoes.filter(t => 
+                t.tipo === 'saida' && 
+                t.data.getMonth() === hoje.getMonth() && 
+                t.data.getFullYear() === hoje.getFullYear() &&
+                t.data <= ultimoDiaMes
+            );
+            
+            // Obter todas as entradas do mês atual
+            const todasEntradasMes = estado.transacoes.filter(t => 
+                t.tipo === 'entrada' && 
+                t.data.getMonth() === hoje.getMonth() && 
+                t.data.getFullYear() === hoje.getFullYear() &&
+                t.data <= ultimoDiaMes
+            );
+            
+            // Calcular o total de saídas (contas)
+            const totalSaidas = todasSaidasMes.reduce((total, t) => total + t.valor, 0);
+            
+            // Calcular o total de entradas
+            const totalEntradas = todasEntradasMes.reduce((total, t) => total + t.valor, 0);
+            
+            // Saldo inicial + entradas deve ser suficiente para cobrir todas as saídas e ainda sobrar R$ 200
+            const saldoTotal = estado.saldoInicial + totalEntradas;
+            
+            return saldoTotal >= (totalSaidas + 200);
         }
 
         function calcularProximidadeSalario(data) {
-            // Encontrar todas as entradas de salário
+            // Calcular a proximidade com entradas de salário
+            // Quanto menor o valor retornado, mais próximo está de uma entrada de salário
+            
+            const hoje = new Date();
+            const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+            
+            // Obter todas as entradas do tipo "salário" no mês atual
             const entradasSalario = estado.transacoes.filter(t => 
-                t.tipo === 'entrada' && t.categoria === 'salario'
+                t.tipo === 'entrada' && 
+                t.categoria === 'salario' && 
+                t.data.getMonth() === hoje.getMonth() && 
+                t.data.getFullYear() === hoje.getFullYear() &&
+                t.data <= ultimoDiaMes
             );
             
             if (entradasSalario.length === 0) {
-                return Infinity; // Se não há salários registrados, retornar infinito
+                return Infinity; // Não há entradas de salário no mês
             }
             
+            // Calcular a menor distância em dias entre a data e qualquer entrada de salário
             let menorDistancia = Infinity;
             
-            // Calcular a menor distância para qualquer entrada de salário
             for (const entrada of entradasSalario) {
                 // Se a entrada é no futuro, considerar a distância negativa (prioridade mais alta)
                 if (entrada.data >= data) {
