@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Anime & Manga Tracker</title>
+  <style>
+    /* Reset básico */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin:0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f0e6 0%, #c9b6a5 100%);
+      color: #3e2c21;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    header {
+      width: 100%;
+      max-width: 1200px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: 900;
+      font-size: 2rem;
+      letter-spacing: 0.1em;
+      color: #5a3e2b;
+      user-select: none;
+    }
+    nav {
+      margin-bottom: 10px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    button, select, input[type=text] {
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.5em 1em;
+      border-radius: 8px;
+      border: 2px solid #6a4f3d;
+      background: #e2d8c3;
+      color: #4b3b2b;
+      transition: background 0.3s, color 0.3s, border-color 0.3s;
+      font-weight: 700;
+    }
+    button:hover, select:hover, input[type=text]:hover {
+      background: #6a4f3d;
+      color: #f5f0e6;
+      border-color: #b2875a;
+    }
+    button:focus, select:focus, input[type=text]:focus {
+      outline: none;
+      box-shadow: 0 0 6px 3px #b2875a;
+      background: #6a4f3d;
+      color: #f5f0e6;
+      border-color: #b2875a;
+    }
+    button.active {
+      background: #4b3b2b;
+      color: #f5f0e6;
+      border-color: #2f2418;
+    }
+
+    /* Grid container */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-auto-rows: 280px;
+      gap: 15px;
+      width: 100%;
+      max-width: 1200px;
+      margin-bottom: 15px;
+    }
+    .hidden {
+      display: none !important;
+    }
+    /* Card */
+    .card {
+      background: #fff8ef;
+      border: 2px solid #b2875a;
+      border-radius: 12px;
+      box-shadow: 3px 3px 6px rgba(96, 67, 47, 0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .card:hover {
+      transform: scale(1.05);
+      box-shadow: 5px 5px 10px rgba(96, 67, 47, 0.6);
+    }
+    .card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-bottom: 2px solid #b2875a;
+    }
+    .card h3 {
+      margin: 10px 0 5px 0;
+      font-size: 1.1rem;
+      text-align: center;
+      color: #5a3e2b;
+      flex-grow: 1;
+    }
+    .card p {
+      margin: 0 0 6px 0;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #6a4f3d;
+    }
+    .card .favorite {
+      color: #c94c4c;
+      font-weight: 900;
+    }
+    .card .rating {
+      color: #b2875a;
+      font-weight: 700;
+    }
+    .card .status {
+      font-style: italic;
+      font-weight: 700;
+      color: #7a5e49;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .pagination button {
+      padding: 6px 12px;
+      font-weight: 700;
+      border-radius: 6px;
+      border: 1.5px solid #6a4f3d;
+      background: #e2d8c3;
+      color: #4b3b2b;
+      transition: background 0.3s, color 0.3s;
+    }
+    .pagination button:hover:not(:disabled) {
+      background: #6a4f3d;
+      color: #f5f0e6;
+      border-color: #b2875a;
+    }
+    .pagination button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    .pagination button.active {
+      background: #4b3b2b;
+      color: #f5f0e6;
+      border-color: #2f2418;
+    }
+
+    /* Filters */
+    .filters {
+      max-width: 1200px;
+      margin-bottom: 15px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .filters input[type=text] {
+      width: 180px;
+    }
+
+    /* Popup overlay */
+    .popup-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(50, 35, 20, 0.75);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 15px;
+    }
+    .popup {
+      background: #fef8f1;
+      border-radius: 14px;
+      box-shadow: 5px 5px 20px rgba(96, 67, 47, 0.6);
+      max-width: 800px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      padding: 20px 30px 30px 30px;
+      outline: none;
+    }
+    .popup .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: transparent;
+      border: none;
+      font-size: 1.6rem;
+      color: #b2875a;
+      cursor: pointer;
+      font-weight: 900;
+      transition: color 0.3s;
+    }
+    .popup .close-btn:hover {
+      color: #4b3b2b;
+    }
+
+    /* Detail popup layout */
+    #detailPopup .popup {
+      display: flex;
+      flex-direction: column;
+    }
+    #detailPopup .cover-img {
+      width: 100%;
+      max-height: 250px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      box-shadow: 0 0 12px rgba(178, 135, 90, 0.8);
+    }
+    #detailPopup .content-row {
+      display: flex;
+      gap: 20px;
+    }
+    #detailPopup .left-img {
+      width: 200px;
+      height: 270px;
+      border-radius: 12px;
+      object-fit: cover;
+      box-shadow: 2px 2px 8px rgba(96,67,47,0.6);
+      flex-shrink: 0;
+    }
+    #detailPopup .info {
+      flex-grow: 1;
+      font-size: 1rem;
+      color: #5a3e2b;
+    }
+    #detailPopup .info p {
+      margin: 8px 0;
+      font-weight: 600;
+    }
+    #detailPopup .info p strong {
+      font-weight: 800;
+      color: #7a5e49;
+    }
+    #detailPopup .review-textarea {
+      width: 100%;
+      min-height: 120px;
+      border-radius: 8px;
+      border: 1.8px solid #b2875a;
+      padding: 8px 10px;
+      font-size: 1rem;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #4b3b2b;
+      background: #fff8ef;
+      resize: vertical;
+    }
+    #detailPopup .review-textarea:disabled {
+      background: #f3ede5;
+      color: #6a4f3d;
+      border-color: #b2a68f;
+      cursor: not-allowed;
+    }
+
+    /* Add popup form */
+    #addPopup .popup {
+      max-width: 480px;
+    }
+    #addPopup form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #addPopup label {
+      font-weight: 700;
+      color: #6a4f3d;
+    }
+    #addPopup input[type=text],
+    #addPopup input[type=number],
+    #addPopup select,
+    #addPopup textarea {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1.8px solid #b2875a;
+      font-size: 1rem;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #4b3b2b;
+      background: #fff8ef;
+      resize: vertical;
+      transition: border-color 0.3s;
+    }
+    #addPopup input[type=text]:focus,
+    #addPopup input[type=number]:focus,
+    #addPopup select:focus,
+    #addPopup textarea:focus {
+      outline: none;
+      border-color: #6a4f3d;
+      background: #f3ede5;
+    }
+    #addPopup textarea {
+      min-height: 100px;
+    }
+    #addPopup .extra-fields {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #addPopup .extra-fields.active {
+      display: flex;
+    }
+    #addPopup button[type=submit] {
+      background: #6a4f3d;
+      color: #f5f0e6;
+      border: none;
+      font-weight: 900;
+      font-size: 1.1rem;
+      padding: 12px 0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #addPopup button[type=submit]:hover {
+      background: #4b3b2b;
+    }
+    #addPopup .favorite-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: #6a4f3d;
+      cursor: pointer;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .grid-container {
+        grid-template-columns: repeat(3, 1fr);
+        grid-auto-rows: 260px;
+      }
+      #detailPopup .content-row {
+        flex-direction: column;
+        align-items: center;
+      }
+      #detailPopup .left-img {
+        width: 80%;
+        height: auto;
+      }
+    }
+    @media (max-width: 480px) {
+      .grid-container {
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: 260px;
+      }
+      #addPopup .popup {
+        max-width: 95vw;
+      }
+      #detailPopup .popup {
+        max-width: 95vw;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>Anime & Manga Tracker</header>
+
+  <nav>
+    <button id="animeBtn" class="active" aria-pressed="true">Animes</button>
+    <button id="mangaBtn" aria-pressed="false">Mangás</button>
+    <button id="addBtn">Adicionar</button>
+  </nav>
+
+  <section class="filters">
+    <input type="text" id="searchInput" placeholder="Buscar por título..." aria-label="Buscar por título" />
+    <select id="filterFavorite" aria-label="Filtrar favoritos">
+      <option value="all">Todos</option>
+      <option value="fav">Favoritos</option>
+      <option value="notfav">Não favoritos</option>
+    </select>
+    <select id="filterStatus" aria-label="Filtrar status">
+      <option value="all">Todos os status</option>
+      <option value="watching">Assistindo/Lendo</option>
+      <option value="completed">Completo</option>
+      <option value="onhold">Em espera</option>
+      <option value="dropped">Abandonado</option>
+      <option value="plan">Planejado</option>
+    </select>
+    <select id="sortSelect" aria-label="Ordenar">
+      <option value="date_desc">Mais recentes</option>
+      <option value="date_asc">Mais antigos</option>
+      <option value="title_asc">Título A-Z</option>
+      <option value="title_desc">Título Z-A</option>
+      <option value="rating_desc">Nota alta</option>
+      <option value="rating_asc">Nota baixa</option>
+    </select>
+  </section>
+
+  <section id="animeGrid" class="grid-container"></section>
+  <section id="mangaGrid" class="grid-container hidden"></section>
+
+  <div class="pagination" role="navigation" aria-label="Paginação"></div>
+
+  <!-- Popup Detalhes -->
+  <div id="detailPopup" class="popup-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="detailTitle" tabindex="-1">
+    <div class="popup" tabindex="0">
+      <button class="close-btn" aria-label="Fechar popup">&times;</button>
+      <img src="" alt="" class="cover-img" />
+      <div class="content-row">
+        <img src="" alt="" class="left-img" />
+        <div class="info">
+          <h2 id="detailTitle"></h2>
+          <p><strong>Tipo:</strong> <span id="detailType"></span></p>
+          <p id="detailEpSeason"></p>
+          <p><strong>Status:</strong> <span id="detailStatus"></span></p>
+          <p><strong>Nota:</strong> <span id="detailRating"></span></p>
+          <p><strong>Favorito:</strong> <span id="detailFavorite"></span></p>
+          <p><strong>Review:</strong></p>
+          <textarea id="detailReview" class="review-textarea" readonly></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup Adicionar -->
+  <div id="addPopup" class="popup-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="addTitle" tabindex="-1">
+    <div class="popup" tabindex="0">
+      <button class="close-btn" aria-label="Fechar popup">&times;</button>
+      <h2 id="addTitle">Adicionar novo item</h2>
+      <form id="addForm">
+        <label for="itemType">Tipo:</label>
+        <select id="itemType" name="type" required>
+          <option value="anime" selected>Animação</option>
+          <option value="manga">Mangá</option>
+        </select>
+
+        <label for="titleInput">Título:</label>
+        <input type="text" id="titleInput" name="title" placeholder="Nome do anime ou mangá" required autocomplete="off" />
+
+        <label for="imageInput">URL da Imagem (capa):</label>
+        <input type="text" id="imageInput" name="image" placeholder="https://..." required autocomplete="off" />
+
+        <label for="favoriteCheckbox" class="favorite-checkbox">
+          <input type="checkbox" id="favoriteCheckbox" name="favorite" />
+          Favorito
+        </label>
+
+        <label for="statusSelect">Status:</label>
+        <select id="statusSelect" name="status" required>
+          <option value="watching">Assistindo/Lendo</option>
+          <option value="completed">Completo</option>
+          <option value="onhold">Em espera</option>
+          <option value="dropped">Abandonado</option>
+          <option value="plan">Planejado</option>
+        </select>
+
+        <label for="ratingInput">Nota (0-10):</label>
+        <input type="number" id="ratingInput" name="rating" min="0" max="10" step="0.1" value="0" required />
+
+        <!-- Campos extras que aparecem dependendo do tipo -->
+        <div id="extraAnimeFields" class="extra-fields active">
+          <label for="episodesInput">Episódios:</label>
+          <input type="number" id="episodesInput" name="episodes" min="0" value="0" />
+
+          <label for="seasonInput">Temporada:</label>
+          <input type="text" id="seasonInput" name="season" placeholder="Ex: Primavera 2025" />
+        </div>
+        <div id="extraMangaFields" class="extra-fields">
+          <label for="chaptersInput">Capítulos:</label>
+          <input type="number" id="chaptersInput" name="chapters" min="0" value="0" />
+
+          <label for="volumesInput">Volumes:</label>
+          <input type="number" id="volumesInput" name="volumes" min="0" value="0" />
+        </div>
+
+        <label for="reviewInput">Review:</label>
+        <textarea id="reviewInput" name="review" placeholder="Escreva sua opinião ou comentário..." rows="4"></textarea>
+
+        <button type="submit">Adicionar</button>
+      </form>
+    </div>
+  </div>
+
+<script>
+  (() => {
+    // Dados de exemplo
+    let items = [
+      {
+        id: 1,
+        type: 'anime',
+        title: 'Attack on Titan',
+        image: 'https://cdn.myanimelist.net/images/anime/10/47347.jpg',
+        favorite: true,
+        status: 'completed',
+        rating: 9.5,
+        episodes: 75,
+        season: 'Primavera 2013',
+        review: 'Incrível anime de ação e drama, recomendo!'
+      },
+      {
+        id: 2,
+        type: 'manga',
+        title: 'Berserk',
+        image: 'https://cdn.myanimelist.net/images/manga/2/157107.jpg',
+        favorite: false,
+        status: 'onhold',
+        rating: 9.0,
+        chapters: 364,
+        volumes: 41,
+        review: 'Obra-prima dos mangás, arte magnífica e história profunda.'
+      },
+      {
+        id: 3,
+        type: 'anime',
+        title: 'Demon Slayer',
+        image: 'https://cdn.myanimelist.net/images/anime/1286/99889.jpg',
+        favorite: false,
+        status: 'watching',
+        rating: 8.7,
+        episodes: 26,
+        season: 'Primavera 2019',
+        review: ''
+      },
+      {
+        id: 4,
+        type: 'manga',
+        title: 'One Piece',
+        image: 'https://cdn.myanimelist.net/images/manga/3/24394.jpg',
+        favorite: true,
+        status: 'watching',
+        rating: 9.2,
+        chapters: 1100,
+        volumes: 102,
+        review: 'Aventura épica que continua cativando gerações.'
+      }
+    ];
+
+    // Variáveis para paginação e filtros
+    let currentType = 'anime'; // anime ou manga
+    let currentPage = 1;
+    const itemsPerPage = 8;
+
+    // Referências DOM
+    const animeBtn = document.getElementById('animeBtn');
+    const mangaBtn = document.getElementById('mangaBtn');
+    const addBtn = document.getElementById('addBtn');
+
+    const animeGrid = document.getElementById('animeGrid');
+    const mangaGrid = document.getElementById('mangaGrid');
+
+    const detailPopup = document.getElementById('detailPopup');
+    const addPopup = document.getElementById('addPopup');
+
+    const detailCloseBtn = detailPopup.querySelector('.close-btn');
+    const addCloseBtn = addPopup.querySelector('.close-btn');
+
+    const searchInput = document.getElementById('searchInput');
+    const filterFavorite = document.getElementById('filterFavorite');
+    const filterStatus = document.getElementById('filterStatus');
+    const sortSelect = document.getElementById('sortSelect');
+
+    const paginationContainer = document.querySelector('.pagination');
+
+    const addForm = document.getElementById('addForm');
+
+    const itemTypeSelect = document.getElementById('itemType');
+    const extraAnimeFields = document.getElementById('extraAnimeFields');
+    const extraMangaFields = document.getElementById('extraMangaFields');
+
+    let lastFocusedElement = null;
+
+    // Função para criar cards
+    function createCard(item) {
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-pressed', 'false');
+      card.dataset.id = item.id;
+
+      card.innerHTML = `
+        <img src="${item.image}" alt="Capa de ${item.title}" />
+        <h3>${item.title}</h3>
+        <p class="status">Status: ${statusText(item.status)}</p>
+        <p class="rating">Nota: ${item.rating.toFixed(1)}</p>
+        <p class="favorite">${item.favorite ? '❤️ Favorito' : ''}</p>
+      `;
+
+      card.addEventListener('click', () => openDetailPopup(item.id));
+      card.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openDetailPopup(item.id);
+        }
+      });
+
+      return card;
+    }
+
+    // Traduzir status
+    function statusText(status) {
+      switch(status) {
+        case 'watching': return 'Assistindo/Lendo';
+        case 'completed': return 'Completo';
+        case 'onhold': return 'Em espera';
+        case 'dropped': return 'Abandonado';
+        case 'plan': return 'Planejado';
+        default: return status;
+      }
+    }
+
+    // Função para renderizar itens
+    function renderItems() {
+      // Filtrar por tipo
+      let filtered = items.filter(i => i.type === currentType);
+
+      // Buscar por título
+      const searchVal = searchInput.value.trim().toLowerCase();
+      if(searchVal) {
+        filtered = filtered.filter(i => i.title.toLowerCase().includes(searchVal));
+      }
+
+      // Filtrar por favorito
+      if(filterFavorite.value === 'fav') {
+        filtered = filtered.filter(i => i.favorite);
+      } else if(filterFavorite.value === 'notfav') {
+        filtered = filtered.filter(i => !i.favorite);
+      }
+
+      // Filtrar por status
+      if(filterStatus.value !== 'all') {
+        filtered = filtered.filter(i => i.status === filterStatus.value);
+      }
+
+      // Ordenação
+      switch(sortSelect.value) {
+        case 'date_desc':
+          filtered.sort((a,b) => b.id - a.id);
+          break;
+        case 'date_asc':
+          filtered.sort((a,b) => a.id - b.id);
+          break;
+        case 'title_asc':
+          filtered.sort((a,b) => a.title.localeCompare(b.title));
+          break;
+        case 'title_desc':
+          filtered.sort((a,b) => b.title.localeCompare(a.title));
+          break;
+        case 'rating_desc':
+          filtered.sort((a,b) => b.rating - a.rating);
+          break;
+        case 'rating_asc':
+          filtered.sort((a,b) => a.rating - b.rating);
+          break;
+      }
+
+      // Paginação
+      const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+      if(currentPage > totalPages) currentPage = totalPages;
+
+      const start = (currentPage -1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const pageItems = filtered.slice(start, end);
+
+      // Atualizar grids
+      animeGrid.innerHTML = '';
+      mangaGrid.innerHTML = '';
+
+      if(currentType === 'anime') {
+        pageItems.forEach(item => {
+          animeGrid.appendChild(createCard(item));
+        });
+        animeGrid.classList.remove('hidden');
+        mangaGrid.classList.add('hidden');
+      } else {
+        pageItems.forEach(item => {
+          mangaGrid.appendChild(createCard(item));
+        });
+        mangaGrid.classList.remove('hidden');
+        animeGrid.classList.add('hidden');
+      }
+
+      renderPagination(totalPages);
+    }
+
+    // Função para renderizar paginação
+    function renderPagination(totalPages) {
+      paginationContainer.innerHTML = '';
+
+      if(totalPages <= 1) return;
+
+      // Botão anterior
+      const prevBtn = document.createElement('button');
+      prevBtn.textContent = 'Anterior';
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.addEventListener('click', () => {
+        currentPage--;
+        renderItems();
+      });
+      paginationContainer.appendChild(prevBtn);
+
+      // Botões de página
+      for(let i=1; i<=totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = i;
+        pageBtn.classList.toggle('active', i === currentPage);
+        pageBtn.setAttribute('aria-current', i === currentPage ? 'page' : 'false');
+        pageBtn.addEventListener('click', () => {
+          currentPage = i;
+          renderItems();
+        });
+        paginationContainer.appendChild(pageBtn);
+      }
+
+      // Botão próximo
+      const nextBtn = document.createElement('button');
+      nextBtn.textContent = 'Próximo';
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.addEventListener('click', () => {
+        currentPage++;
+        renderItems();
+      });
+      paginationContainer.appendChild(nextBtn);
+    }
+
+    // Abrir popup detalhes
+    function openDetailPopup(id) {
+      const item = items.find(i => i.id === id);
+      if(!item) return;
+
+      lastFocusedElement = document.activeElement;
+
+      detailPopup.querySelector('.cover-img').src = item.image;
+      detailPopup.querySelector('.cover-img').alt = 'Capa de ' + item.title;
+      detailPopup.querySelector('.left-img').src = item.image;
+      detailPopup.querySelector('.left-img').alt = 'Capa de ' + item.title;
+      detailPopup.querySelector('#detailTitle').textContent = item.title;
+      detailPopup.querySelector('#detailType').textContent = item.type === 'anime' ? 'Animação' : 'Mangá';
+
+      let epSeasonText = '';
+      if(item.type === 'anime') {
+        epSeasonText = `<strong>Episódios:</strong> ${item.episodes ?? 0} | <strong>Temporada:</strong> ${item.season ?? '-'}`;
+      } else {
+        epSeasonText = `<strong>Capítulos:</strong> ${item.chapters ?? 0} | <strong>Volumes:</strong> ${item.volumes ?? 0}`;
+      }
+      detailPopup.querySelector('#detailEpSeason').innerHTML = epSeasonText;
+
+      detailPopup.querySelector('#detailStatus').textContent = statusText(item.status);
+      detailPopup.querySelector('#detailRating').textContent = item.rating.toFixed(1);
+      detailPopup.querySelector('#detailFavorite').textContent = item.favorite ? 'Sim' : 'Não';
+
+      detailPopup.querySelector('#detailReview').value = item.review || '';
+
+      detailPopup.classList.remove('hidden');
+      detailPopup.querySelector('.popup').focus();
+    }
+
+    // Fechar popup detalhe
+    function closeDetailPopup() {
+      detailPopup.classList.add('hidden');
+      if(lastFocusedElement) lastFocusedElement.focus();
+    }
+
+    // Abrir popup adicionar
+    function openAddPopup() {
+      lastFocusedElement = document.activeElement;
+      addForm.reset();
+      toggleExtraFields('anime');
+      addPopup.classList.remove('hidden');
+      addPopup.querySelector('.popup').focus();
+    }
+
+    // Fechar popup adicionar
+    function closeAddPopup() {
+      addPopup.classList.add('hidden');
+      if(lastFocusedElement) lastFocusedElement.focus();
+    }
+
+    // Alterar campos extras conforme tipo selecionado
+    function toggleExtraFields(type) {
+      if(type === 'anime') {
+        extraAnimeFields.classList.add('active');
+        extraMangaFields.classList.remove('active');
+      } else {
+        extraAnimeFields.classList.remove('active');
+        extraMangaFields.classList.add('active');
+      }
+    }
+
+    // Event listeners principais
+
+    animeBtn.addEventListener('click', () => {
+      if(currentType !== 'anime') {
+        currentType = 'anime';
+        currentPage = 1;
+        animeBtn.classList.add('active');
+        mangaBtn.classList.remove('active');
+        animeBtn.setAttribute('aria-pressed', 'true');
+        mangaBtn.setAttribute('aria-pressed', 'false');
+        renderItems();
+      }
+    });
+
+    mangaBtn.addEventListener('click', () => {
+      if(currentType !== 'manga') {
+        currentType = 'manga';
+        currentPage = 1;
+        mangaBtn.classList.add('active');
+        animeBtn.classList.remove('active');
+        mangaBtn.setAttribute('aria-pressed', 'true');
+        animeBtn.setAttribute('aria-pressed', 'false');
+        renderItems();
+      }
+    });
+
+    addBtn.addEventListener('click', () => {
+      openAddPopup();
+    });
+
+    detailCloseBtn.addEventListener('click', closeDetailPopup);
+    addCloseBtn.addEventListener('click', closeAddPopup);
+
+    // Fechar popups ao clicar fora da caixa
+    detailPopup.addEventListener('click', (e) => {
+      if(e.target === detailPopup) closeDetailPopup();
+    });
+    addPopup.addEventListener('click', (e) => {
+      if(e.target === addPopup) closeAddPopup();
+    });
+
+    // Fechar popups com ESC
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape') {
+        if(!detailPopup.classList.contains('hidden')) {
+          closeDetailPopup();
+        }
+        if(!addPopup.classList.contains('hidden')) {
+          closeAddPopup();
+        }
+      }
+    });
+
+    // Filtrar / ordenar em tempo real
+    [searchInput, filterFavorite, filterStatus, sortSelect].forEach(el => {
+      el.addEventListener('input', () => {
+        currentPage = 1;
+        renderItems();
+      });
+    });
+
+    // Trocar campos extras no form adicionar
+    itemTypeSelect.addEventListener('change', (e) => {
+      toggleExtraFields(e.target.value);
+    });
+
+    // Submissão form adicionar
+    addForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(addForm);
+      const type = formData.get('type');
+      const title = formData.get('title').trim();
+      const image = formData.get('image').trim();
+      const favorite = formData.get('favorite') === 'on';
+      const status = formData.get('status');
+      const rating = parseFloat(formData.get('rating')) || 0;
+      const review = formData.get('review').trim();
+
+      let newItem = {
+        id: items.length ? Math.max(...items.map(i => i.id)) + 1 : 1,
+        type,
+        title,
+        image,
+        favorite,
+        status,
+        rating,
+        review
+      };
+
+      if(type === 'anime') {
+        newItem.episodes = parseInt(formData.get('episodes')) || 0;
+        newItem.season = formData.get('season').trim() || '-';
+      } else {
+        newItem.chapters = parseInt(formData.get('chapters')) || 0;
+        newItem.volumes = parseInt(formData.get('volumes')) || 0;
+      }
+
+      items.push(newItem);
+      currentPage = 1;
+      renderItems();
+      closeAddPopup();
+    });
+
+    // Inicializar
+    renderItems();
+  })();
+</script>
+
+</body>
+</html>
