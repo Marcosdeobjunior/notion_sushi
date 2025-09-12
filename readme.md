@@ -6,16 +6,6 @@
   <title>Notion Sushi</title>
   <!-- Favicon: sushi emoji as inline SVG -->
   <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text y='50%' font-size='48' text-anchor='middle' x='50%'>🍣</text></svg>">
-  <style>
-    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;}
-    body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f6f7fb;margin:0}
-    .card{background:#fff;padding:28px;border-radius:12px;box-shadow:0 6px 24px rgba(20,24,40,0.08);max-width:680px;width:92%;text-align:center}
-    .icon{font-size:64px;margin-bottom:12px}
-    h1{margin:0 0 8px 0;font-size:28px}
-    p{margin:0 0 16px;color:#444}
-    a.button{display:inline-block;padding:10px 16px;border-radius:8px;background:#111827;color:#fff;text-decoration:none;font-weight:600}
-    footer{margin-top:16px;font-size:13px;color:#777}
-  </style>
 </head>
 <body>
   <main class="card">
