@@ -67,6 +67,27 @@
       border-color: #2f2418;
     }
 
+    /* Botões de importar/exportar */
+    .import-export-section {
+      margin-bottom: 15px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .import-export-section button {
+      background: #5a8a4b;
+      color: #fff;
+      border-color: #4a7a3b;
+    }
+    .import-export-section button:hover {
+      background: #4a7a3b;
+      border-color: #3a6a2b;
+    }
+    #fileInput {
+      display: none;
+    }
+
     /* Grid container */
     .grid-container {
       display: grid;
@@ -416,6 +437,32 @@
       cursor: pointer;
     }
 
+    /* Notificações */
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #4b3b2b;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+      z-index: 1100;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .notification.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .notification.success {
+      background: #5a8a4b;
+    }
+    .notification.error {
+      background: #c94c4c;
+    }
+
     /* Responsive */
     @media (max-width: 1024px) {
       .grid-container {
@@ -454,6 +501,14 @@
     <button id="mangaBtn" aria-pressed="false">Mangás</button>
     <button id="addBtn">Adicionar</button>
   </nav>
+
+  <!-- Seção de Importar/Exportar -->
+  <section class="import-export-section">
+    <button id="exportJsonBtn">📥 Exportar JSON</button>
+    <button id="exportCsvBtn">📊 Exportar CSV</button>
+    <button id="importBtn">📤 Importar</button>
+    <input type="file" id="fileInput" accept=".json,.csv" />
+  </section>
 
   <section class="filters">
     <input type="text" id="searchInput" placeholder="Buscar por título..." aria-label="Buscar por título" />
@@ -630,10 +685,16 @@
     </div>
   </div>
 
+  <!-- Elemento de notificação -->
+  <div id="notification" class="notification"></div>
+
 <script>
   (() => {
-    // Dados de exemplo
-    let items = [
+    // Chave para armazenamento no localStorage
+    const STORAGE_KEY = 'anime_manga_tracker_data';
+    
+    // Dados de exemplo (usados apenas se não houver dados no localStorage)
+    const defaultItems = [
       {
         id: 1,
         type: 'anime',
@@ -684,6 +745,9 @@
       }
     ];
 
+    // Carregar dados do localStorage ou usar os dados padrão
+    let items = loadFromLocalStorage() || defaultItems;
+
     // Variáveis para paginação e filtros
     let currentType = 'anime'; // anime ou manga
     let currentPage = 1;
@@ -726,8 +790,194 @@
 
     const editDetailBtn = document.getElementById('editDetailBtn');
     const deleteDetailBtn = document.getElementById('deleteDetailBtn');
+    
+    const notification = document.getElementById('notification');
+
+    // Elementos de importar/exportar
+    const exportJsonBtn = document.getElementById('exportJsonBtn');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const importBtn = document.getElementById('importBtn');
+    const fileInput = document.getElementById('fileInput');
 
     let lastFocusedElement = null;
+
+    // Função para carregar dados do localStorage
+    function loadFromLocalStorage() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data ? JSON.parse(data) : null;
+      } catch (error) {
+        console.error('Erro ao carregar dados do localStorage:', error);
+        return null;
+      }
+    }
+
+    // Função para salvar dados no localStorage
+    function saveToLocalStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        return true;
+      } catch (error) {
+        console.error('Erro ao salvar dados no localStorage:', error);
+        showNotification('Erro ao salvar dados', 'error');
+        return false;
+      }
+    }
+
+    // Função para mostrar notificação
+    function showNotification(message, type = 'success') {
+      notification.textContent = message;
+      notification.className = 'notification ' + type;
+      notification.classList.add('show');
+      
+      // Esconder notificação após 3 segundos
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+
+    // Função para exportar dados como JSON
+    function exportToJson() {
+      try {
+        const dataStr = JSON.stringify(items, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `anime_manga_tracker_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        showNotification('Dados exportados em JSON com sucesso!');
+      } catch (error) {
+        console.error('Erro ao exportar JSON:', error);
+        showNotification('Erro ao exportar dados em JSON', 'error');
+      }
+    }
+
+    // Função para exportar dados como CSV
+    function exportToCsv() {
+      try {
+        const headers = ['ID', 'Tipo', 'Título', 'Imagem', 'Favorito', 'Status', 'Nota', 'Episódios', 'Temporada', 'Capítulos', 'Volumes', 'Review'];
+        const csvContent = [
+          headers.join(','),
+          ...items.map(item => [
+            item.id,
+            item.type,
+            `"${item.title.replace(/"/g, '""')}"`,
+            `"${item.image}"`,
+            item.favorite ? 'Sim' : 'Não',
+            item.status,
+            item.rating,
+            item.episodes || '',
+            `"${(item.season || '').replace(/"/g, '""')}"`,
+            item.chapters || '',
+            item.volumes || '',
+            `"${(item.review || '').replace(/"/g, '""')}"`
+          ].join(','))
+        ].join('\n');
+
+        const dataBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(dataBlob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `anime_manga_tracker_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        showNotification('Dados exportados em CSV com sucesso!');
+      } catch (error) {
+        console.error('Erro ao exportar CSV:', error);
+        showNotification('Erro ao exportar dados em CSV', 'error');
+      }
+    }
+
+    // Função para importar dados
+    function importData(file) {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        try {
+          const content = e.target.result;
+          let importedItems = [];
+          
+          if (file.name.endsWith('.json')) {
+            importedItems = JSON.parse(content);
+          } else if (file.name.endsWith('.csv')) {
+            const lines = content.split('\n');
+            const headers = lines[0].split(',');
+            
+            for (let i = 1; i < lines.length; i++) {
+              if (lines[i].trim()) {
+                const values = lines[i].split(',');
+                const item = {
+                  id: parseInt(values[0]) || Date.now() + i,
+                  type: values[1],
+                  title: values[2].replace(/^"|"$/g, '').replace(/""/g, '"'),
+                  image: values[3].replace(/^"|"$/g, ''),
+                  favorite: values[4] === 'Sim',
+                  status: values[5],
+                  rating: parseFloat(values[6]) || 0,
+                  review: values[11] ? values[11].replace(/^"|"$/g, '').replace(/""/g, '"') : ''
+                };
+                
+                if (item.type === 'anime') {
+                  item.episodes = parseInt(values[7]) || 0;
+                  item.season = values[8] ? values[8].replace(/^"|"$/g, '').replace(/""/g, '"') : '';
+                } else {
+                  item.chapters = parseInt(values[9]) || 0;
+                  item.volumes = parseInt(values[10]) || 0;
+                }
+                
+                importedItems.push(item);
+              }
+            }
+          }
+          
+          if (importedItems.length > 0) {
+            // Verificar se deve substituir ou mesclar
+            const shouldReplace = confirm(`Encontrados ${importedItems.length} itens para importar.\n\nClique OK para SUBSTITUIR todos os dados atuais.\nClique Cancelar para MESCLAR com os dados existentes.`);
+            
+            if (shouldReplace) {
+              items = importedItems;
+            } else {
+              // Mesclar dados, evitando duplicatas por título
+              const existingTitles = new Set(items.map(item => item.title.toLowerCase()));
+              const newItems = importedItems.filter(item => !existingTitles.has(item.title.toLowerCase()));
+              
+              // Ajustar IDs para evitar conflitos
+              const maxId = items.length ? Math.max(...items.map(i => i.id)) : 0;
+              newItems.forEach((item, index) => {
+                item.id = maxId + index + 1;
+              });
+              
+              items = [...items, ...newItems];
+              showNotification(`${newItems.length} novos itens importados (${importedItems.length - newItems.length} duplicatas ignoradas)`);
+            }
+            
+            saveToLocalStorage();
+            renderItems();
+            
+            if (shouldReplace) {
+              showNotification(`${importedItems.length} itens importados com sucesso!`);
+            }
+          } else {
+            showNotification('Nenhum item válido encontrado no arquivo', 'error');
+          }
+        } catch (error) {
+          console.error('Erro ao importar dados:', error);
+          showNotification('Erro ao importar dados. Verifique o formato do arquivo.', 'error');
+        }
+      };
+      
+      reader.readAsText(file);
+    }
 
     // Função para criar cards
     function createCard(item) {
@@ -988,8 +1238,10 @@
     function deleteItem(id) {
       if(confirm('Tem certeza que deseja excluir este item?')) {
         items = items.filter(i => i.id !== id);
+        saveToLocalStorage();
         renderItems();
         closeDetailPopup();
+        showNotification('Item excluído com sucesso');
       }
     }
 
@@ -1058,6 +1310,17 @@
     deleteDetailBtn.addEventListener('click', () => {
       if(currentEditingId) {
         deleteItem(currentEditingId);
+      }
+    });
+
+    // Event listeners para importar/exportar
+    exportJsonBtn.addEventListener('click', exportToJson);
+    exportCsvBtn.addEventListener('click', exportToCsv);
+    importBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        importData(e.target.files[0]);
+        e.target.value = ''; // Limpar input para permitir reimportar o mesmo arquivo
       }
     });
 
@@ -1142,9 +1405,11 @@
       }
 
       items.push(newItem);
+      saveToLocalStorage();
       currentPage = 1;
       renderItems();
       closeAddPopup();
+      showNotification('Item adicionado com sucesso');
     });
 
     // Submissão form editar
@@ -1188,8 +1453,10 @@
           delete items[itemIndex].season;
         }
 
+        saveToLocalStorage();
         renderItems();
         closeEditPopup();
+        showNotification('Item atualizado com sucesso');
       }
     });
 
