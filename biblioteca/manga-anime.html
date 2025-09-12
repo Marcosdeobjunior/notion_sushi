@@ -92,6 +92,7 @@
       overflow: hidden;
       cursor: pointer;
       transition: transform 0.2s ease;
+      position: relative;
     }
     .card:hover {
       transform: scale(1.05);
@@ -128,6 +129,43 @@
       font-style: italic;
       font-weight: 700;
       color: #7a5e49;
+    }
+
+    /* Botões de ação no card */
+    .card-actions {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .card:hover .card-actions {
+      opacity: 1;
+    }
+    .card-actions button {
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      border-radius: 4px;
+      border: 1px solid #6a4f3d;
+      background: rgba(255, 248, 239, 0.9);
+      color: #4b3b2b;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .card-actions button:hover {
+      background: #6a4f3d;
+      color: #f5f0e6;
+    }
+    .card-actions .edit-btn {
+      background: rgba(178, 135, 90, 0.9);
+      color: #fff;
+    }
+    .card-actions .delete-btn {
+      background: rgba(201, 76, 76, 0.9);
+      color: #fff;
     }
 
     /* Pagination */
@@ -271,23 +309,57 @@
       cursor: not-allowed;
     }
 
-    /* Add popup form */
-    #addPopup .popup {
+    /* Botões de ação no popup de detalhes */
+    .detail-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      justify-content: flex-end;
+    }
+    .detail-actions button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .edit-detail-btn {
+      background: #b2875a;
+      color: #fff;
+    }
+    .edit-detail-btn:hover {
+      background: #8a6b47;
+    }
+    .delete-detail-btn {
+      background: #c94c4c;
+      color: #fff;
+    }
+    .delete-detail-btn:hover {
+      background: #a73d3d;
+    }
+
+    /* Add/Edit popup form */
+    #addPopup .popup, #editPopup .popup {
       max-width: 480px;
     }
-    #addPopup form {
+    #addPopup form, #editPopup form {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
-    #addPopup label {
+    #addPopup label, #editPopup label {
       font-weight: 700;
       color: #6a4f3d;
     }
     #addPopup input[type=text],
     #addPopup input[type=number],
     #addPopup select,
-    #addPopup textarea {
+    #addPopup textarea,
+    #editPopup input[type=text],
+    #editPopup input[type=number],
+    #editPopup select,
+    #editPopup textarea {
       padding: 8px 10px;
       border-radius: 8px;
       border: 1.8px solid #b2875a;
@@ -301,23 +373,27 @@
     #addPopup input[type=text]:focus,
     #addPopup input[type=number]:focus,
     #addPopup select:focus,
-    #addPopup textarea:focus {
+    #addPopup textarea:focus,
+    #editPopup input[type=text]:focus,
+    #editPopup input[type=number]:focus,
+    #editPopup select:focus,
+    #editPopup textarea:focus {
       outline: none;
       border-color: #6a4f3d;
       background: #f3ede5;
     }
-    #addPopup textarea {
+    #addPopup textarea, #editPopup textarea {
       min-height: 100px;
     }
-    #addPopup .extra-fields {
+    #addPopup .extra-fields, #editPopup .extra-fields {
       display: none;
       flex-direction: column;
       gap: 12px;
     }
-    #addPopup .extra-fields.active {
+    #addPopup .extra-fields.active, #editPopup .extra-fields.active {
       display: flex;
     }
-    #addPopup button[type=submit] {
+    #addPopup button[type=submit], #editPopup button[type=submit] {
       background: #6a4f3d;
       color: #f5f0e6;
       border: none;
@@ -328,10 +404,10 @@
       cursor: pointer;
       transition: background 0.3s;
     }
-    #addPopup button[type=submit]:hover {
+    #addPopup button[type=submit]:hover, #editPopup button[type=submit]:hover {
       background: #4b3b2b;
     }
-    #addPopup .favorite-checkbox {
+    #addPopup .favorite-checkbox, #editPopup .favorite-checkbox {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -360,7 +436,7 @@
         grid-template-columns: repeat(2, 1fr);
         grid-auto-rows: 260px;
       }
-      #addPopup .popup {
+      #addPopup .popup, #editPopup .popup {
         max-width: 95vw;
       }
       #detailPopup .popup {
@@ -425,6 +501,10 @@
           <p><strong>Favorito:</strong> <span id="detailFavorite"></span></p>
           <p><strong>Review:</strong></p>
           <textarea id="detailReview" class="review-textarea" readonly></textarea>
+          <div class="detail-actions">
+            <button id="editDetailBtn" class="edit-detail-btn">Editar</button>
+            <button id="deleteDetailBtn" class="delete-detail-btn">Excluir</button>
+          </div>
         </div>
       </div>
     </div>
@@ -489,16 +569,126 @@
     </div>
   </div>
 
+  <!-- Popup Editar -->
+  <div id="editPopup" class="popup-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="editTitle" tabindex="-1">
+    <div class="popup" tabindex="0">
+      <button class="close-btn" aria-label="Fechar popup">&times;</button>
+      <h2 id="editTitle">Editar item</h2>
+      <form id="editForm">
+        <input type="hidden" id="editItemId" name="id" />
+        
+        <label for="editItemType">Tipo:</label>
+        <select id="editItemType" name="type" required>
+          <option value="anime">Animação</option>
+          <option value="manga">Mangá</option>
+        </select>
+
+        <label for="editTitleInput">Título:</label>
+        <input type="text" id="editTitleInput" name="title" placeholder="Nome do anime ou mangá" required autocomplete="off" />
+
+        <label for="editImageInput">URL da Imagem (capa):</label>
+        <input type="text" id="editImageInput" name="image" placeholder="https://..." required autocomplete="off" />
+
+        <label for="editFavoriteCheckbox" class="favorite-checkbox">
+          <input type="checkbox" id="editFavoriteCheckbox" name="favorite" />
+          Favorito
+        </label>
+
+        <label for="editStatusSelect">Status:</label>
+        <select id="editStatusSelect" name="status" required>
+          <option value="watching">Assistindo/Lendo</option>
+          <option value="completed">Completo</option>
+          <option value="onhold">Em espera</option>
+          <option value="dropped">Abandonado</option>
+          <option value="plan">Planejado</option>
+        </select>
+
+        <label for="editRatingInput">Nota (0-10):</label>
+        <input type="number" id="editRatingInput" name="rating" min="0" max="10" step="0.1" required />
+
+        <!-- Campos extras que aparecem dependendo do tipo -->
+        <div id="editExtraAnimeFields" class="extra-fields">
+          <label for="editEpisodesInput">Episódios:</label>
+          <input type="number" id="editEpisodesInput" name="episodes" min="0" />
+
+          <label for="editSeasonInput">Temporada:</label>
+          <input type="text" id="editSeasonInput" name="season" placeholder="Ex: Primavera 2025" />
+        </div>
+        <div id="editExtraMangaFields" class="extra-fields">
+          <label for="editChaptersInput">Capítulos:</label>
+          <input type="number" id="editChaptersInput" name="chapters" min="0" />
+
+          <label for="editVolumesInput">Volumes:</label>
+          <input type="number" id="editVolumesInput" name="volumes" min="0" />
+        </div>
+
+        <label for="editReviewInput">Review:</label>
+        <textarea id="editReviewInput" name="review" placeholder="Escreva sua opinião ou comentário..." rows="4"></textarea>
+
+        <button type="submit">Salvar Alterações</button>
+      </form>
+    </div>
+  </div>
+
 <script>
   (() => {
     // Dados de exemplo
     let items = [
+      {
+        id: 1,
+        type: 'anime',
+        title: 'Attack on Titan',
+        image: 'https://cdn.myanimelist.net/images/anime/10/47347.jpg',
+        favorite: true,
+        status: 'completed',
+        rating: 9.5,
+        episodes: 75,
+        season: 'Primavera 2013',
+        review: 'Incrível anime de ação e drama, recomendo!'
+      },
+      {
+        id: 2,
+        type: 'manga',
+        title: 'Berserk',
+        image: 'https://cdn.myanimelist.net/images/manga/2/157107.jpg',
+        favorite: false,
+        status: 'onhold',
+        rating: 9.0,
+        chapters: 364,
+        volumes: 41,
+        review: 'Obra-prima dos mangás, arte magnífica e história profunda.'
+      },
+      {
+        id: 3,
+        type: 'anime',
+        title: 'Demon Slayer',
+        image: 'https://cdn.myanimelist.net/images/anime/1286/99889.jpg',
+        favorite: false,
+        status: 'watching',
+        rating: 8.7,
+        episodes: 26,
+        season: 'Primavera 2019',
+        review: ''
+      },
+      {
+        id: 4,
+        type: 'manga',
+        title: 'One Piece',
+        image: 'https://cdn.myanimelist.net/images/manga/3/24394.jpg',
+        favorite: true,
+        status: 'watching',
+        rating: 9.2,
+        chapters: 1100,
+        volumes: 102,
+        review: 'Aventura épica que continua cativando gerações.'
+      }
     ];
 
     // Variáveis para paginação e filtros
     let currentType = 'anime'; // anime ou manga
     let currentPage = 1;
     const itemsPerPage = 8;
+    let currentEditingId = null;
 
     // Referências DOM
     const animeBtn = document.getElementById('animeBtn');
@@ -510,9 +700,11 @@
 
     const detailPopup = document.getElementById('detailPopup');
     const addPopup = document.getElementById('addPopup');
+    const editPopup = document.getElementById('editPopup');
 
     const detailCloseBtn = detailPopup.querySelector('.close-btn');
     const addCloseBtn = addPopup.querySelector('.close-btn');
+    const editCloseBtn = editPopup.querySelector('.close-btn');
 
     const searchInput = document.getElementById('searchInput');
     const filterFavorite = document.getElementById('filterFavorite');
@@ -522,10 +714,18 @@
     const paginationContainer = document.querySelector('.pagination');
 
     const addForm = document.getElementById('addForm');
+    const editForm = document.getElementById('editForm');
 
     const itemTypeSelect = document.getElementById('itemType');
     const extraAnimeFields = document.getElementById('extraAnimeFields');
     const extraMangaFields = document.getElementById('extraMangaFields');
+
+    const editItemTypeSelect = document.getElementById('editItemType');
+    const editExtraAnimeFields = document.getElementById('editExtraAnimeFields');
+    const editExtraMangaFields = document.getElementById('editExtraMangaFields');
+
+    const editDetailBtn = document.getElementById('editDetailBtn');
+    const deleteDetailBtn = document.getElementById('deleteDetailBtn');
 
     let lastFocusedElement = null;
 
@@ -539,6 +739,10 @@
       card.dataset.id = item.id;
 
       card.innerHTML = `
+        <div class="card-actions">
+          <button class="edit-btn" onclick="event.stopPropagation(); openEditPopup(${item.id})" title="Editar">✏️</button>
+          <button class="delete-btn" onclick="event.stopPropagation(); deleteItem(${item.id})" title="Excluir">🗑️</button>
+        </div>
         <img src="${item.image}" alt="Capa de ${item.title}" />
         <h3>${item.title}</h3>
         <p class="status">Status: ${statusText(item.status)}</p>
@@ -689,6 +893,7 @@
       if(!item) return;
 
       lastFocusedElement = document.activeElement;
+      currentEditingId = id;
 
       detailPopup.querySelector('.cover-img').src = item.image;
       detailPopup.querySelector('.cover-img').alt = 'Capa de ' + item.title;
@@ -718,6 +923,7 @@
     // Fechar popup detalhe
     function closeDetailPopup() {
       detailPopup.classList.add('hidden');
+      currentEditingId = null;
       if(lastFocusedElement) lastFocusedElement.focus();
     }
 
@@ -736,7 +942,58 @@
       if(lastFocusedElement) lastFocusedElement.focus();
     }
 
-    // Alterar campos extras conforme tipo selecionado
+    // Abrir popup editar
+    function openEditPopup(id) {
+      const item = items.find(i => i.id === id);
+      if(!item) return;
+
+      lastFocusedElement = document.activeElement;
+      currentEditingId = id;
+
+      // Preencher formulário de edição
+      document.getElementById('editItemId').value = item.id;
+      document.getElementById('editItemType').value = item.type;
+      document.getElementById('editTitleInput').value = item.title;
+      document.getElementById('editImageInput').value = item.image;
+      document.getElementById('editFavoriteCheckbox').checked = item.favorite;
+      document.getElementById('editStatusSelect').value = item.status;
+      document.getElementById('editRatingInput').value = item.rating;
+      document.getElementById('editReviewInput').value = item.review || '';
+
+      if(item.type === 'anime') {
+        document.getElementById('editEpisodesInput').value = item.episodes || 0;
+        document.getElementById('editSeasonInput').value = item.season || '';
+        toggleEditExtraFields('anime');
+      } else {
+        document.getElementById('editChaptersInput').value = item.chapters || 0;
+        document.getElementById('editVolumesInput').value = item.volumes || 0;
+        toggleEditExtraFields('manga');
+      }
+
+      // Fechar popup de detalhes se estiver aberto
+      closeDetailPopup();
+
+      editPopup.classList.remove('hidden');
+      editPopup.querySelector('.popup').focus();
+    }
+
+    // Fechar popup editar
+    function closeEditPopup() {
+      editPopup.classList.add('hidden');
+      currentEditingId = null;
+      if(lastFocusedElement) lastFocusedElement.focus();
+    }
+
+    // Deletar item
+    function deleteItem(id) {
+      if(confirm('Tem certeza que deseja excluir este item?')) {
+        items = items.filter(i => i.id !== id);
+        renderItems();
+        closeDetailPopup();
+      }
+    }
+
+    // Alterar campos extras conforme tipo selecionado (adicionar)
     function toggleExtraFields(type) {
       if(type === 'anime') {
         extraAnimeFields.classList.add('active');
@@ -746,6 +1003,21 @@
         extraMangaFields.classList.add('active');
       }
     }
+
+    // Alterar campos extras conforme tipo selecionado (editar)
+    function toggleEditExtraFields(type) {
+      if(type === 'anime') {
+        editExtraAnimeFields.classList.add('active');
+        editExtraMangaFields.classList.remove('active');
+      } else {
+        editExtraAnimeFields.classList.remove('active');
+        editExtraMangaFields.classList.add('active');
+      }
+    }
+
+    // Tornar funções globais para uso nos botões
+    window.openEditPopup = openEditPopup;
+    window.deleteItem = deleteItem;
 
     // Event listeners principais
 
@@ -777,8 +1049,21 @@
       openAddPopup();
     });
 
+    editDetailBtn.addEventListener('click', () => {
+      if(currentEditingId) {
+        openEditPopup(currentEditingId);
+      }
+    });
+
+    deleteDetailBtn.addEventListener('click', () => {
+      if(currentEditingId) {
+        deleteItem(currentEditingId);
+      }
+    });
+
     detailCloseBtn.addEventListener('click', closeDetailPopup);
     addCloseBtn.addEventListener('click', closeAddPopup);
+    editCloseBtn.addEventListener('click', closeEditPopup);
 
     // Fechar popups ao clicar fora da caixa
     detailPopup.addEventListener('click', (e) => {
@@ -786,6 +1071,9 @@
     });
     addPopup.addEventListener('click', (e) => {
       if(e.target === addPopup) closeAddPopup();
+    });
+    editPopup.addEventListener('click', (e) => {
+      if(e.target === editPopup) closeEditPopup();
     });
 
     // Fechar popups com ESC
@@ -796,6 +1084,9 @@
         }
         if(!addPopup.classList.contains('hidden')) {
           closeAddPopup();
+        }
+        if(!editPopup.classList.contains('hidden')) {
+          closeEditPopup();
         }
       }
     });
@@ -811,6 +1102,11 @@
     // Trocar campos extras no form adicionar
     itemTypeSelect.addEventListener('change', (e) => {
       toggleExtraFields(e.target.value);
+    });
+
+    // Trocar campos extras no form editar
+    editItemTypeSelect.addEventListener('change', (e) => {
+      toggleEditExtraFields(e.target.value);
     });
 
     // Submissão form adicionar
@@ -851,6 +1147,52 @@
       closeAddPopup();
     });
 
+    // Submissão form editar
+    editForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(editForm);
+      const id = parseInt(formData.get('id'));
+      const type = formData.get('type');
+      const title = formData.get('title').trim();
+      const image = formData.get('image').trim();
+      const favorite = formData.get('favorite') === 'on';
+      const status = formData.get('status');
+      const rating = parseFloat(formData.get('rating')) || 0;
+      const review = formData.get('review').trim();
+
+      const itemIndex = items.findIndex(i => i.id === id);
+      if(itemIndex !== -1) {
+        items[itemIndex] = {
+          ...items[itemIndex],
+          type,
+          title,
+          image,
+          favorite,
+          status,
+          rating,
+          review
+        };
+
+        if(type === 'anime') {
+          items[itemIndex].episodes = parseInt(formData.get('episodes')) || 0;
+          items[itemIndex].season = formData.get('season').trim() || '-';
+          // Remover propriedades de manga se mudou para anime
+          delete items[itemIndex].chapters;
+          delete items[itemIndex].volumes;
+        } else {
+          items[itemIndex].chapters = parseInt(formData.get('chapters')) || 0;
+          items[itemIndex].volumes = parseInt(formData.get('volumes')) || 0;
+          // Remover propriedades de anime se mudou para manga
+          delete items[itemIndex].episodes;
+          delete items[itemIndex].season;
+        }
+
+        renderItems();
+        closeEditPopup();
+      }
+    });
+
     // Inicializar
     renderItems();
   })();
@@ -858,3 +1200,4 @@
 
 </body>
 </html>
+
